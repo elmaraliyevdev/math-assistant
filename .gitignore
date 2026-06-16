@@ -1,0 +1,86 @@
+# --- Secrets & local environment ---
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.production.example
+!release/env.production.example
+
+# Deployment templates with placeholder values stay tracked (deploy/mvp.env, etc.)
+
+# --- Python bytecode & virtual environments ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# --- Python tool caches & coverage ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage/
+coverage.xml
+htmlcov/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+dist/
+build/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+packages/web/coverage/
+
+# --- Local databases & runtime data ---
+*.sqlite3
+*.sqlite
+*.db
+postgres_data/
+
+# --- Private keys & credentials (never commit) ---
+*.pem
+!**/.venv/**
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+credentials.json
+secrets.json
+service-account*.json
+*.token
+
+# --- Editors & OS ---
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- Logs & temp ---
+*.log
+logs/
+.tmp/
+tmp/
+
+# --- E2E / test artifacts ---
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/

@@ -1,0 +1,118 @@
+[project]
+name = "runtime-core"
+version = "0.1.0"
+description = "Deterministic game mathematics engines — validation, runtime, simulation, and metrics"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.0,<3",
+    "pydantic>=2.10,<3",
+    "pyyaml>=6.0,<7",
+    "structlog>=24.4,<25",
+    "jsonschema>=4.23,<5",
+    "referencing>=0.36,<1",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.10,<25",
+    "mypy>=1.13,<2",
+    "psutil>=6,<8",
+    "pytest>=8.3,<9",
+    "pytest-cov>=6,<7",
+    "ruff>=0.8,<1",
+    "hypothesis>=6,<7",
+    "types-jsonschema>=4.23,<5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+golden-runner = "runtime_core.golden.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["runtime_core"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"../game-schema" = "runtime_core/data/game-schema"
+
+[tool.uv]
+python-preference = "managed"
+
+[tool.black]
+line-length = 88
+target-version = ["py313"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+src = ["runtime_core", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "TCH",
+]
+ignore = ["TC001", "TC002", "TC003"]
+
+[tool.ruff.lint.per-file-ignores]
+"runtime_core/validation/issues.py" = ["E501"]
+"tests/runtime/**" = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["runtime_core"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+packages = ["runtime_core"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+markers = [
+    "golden: golden fixture integration tests",
+    "golden_runtime: golden runtime validation tests (M7)",
+    "golden_mathematical: golden mathematical validation tests (M9)",
+    "certification: performance and certification benchmarks (M10.5)",
+    "hypothesis: property-based tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["runtime_core"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "@overload",
+]

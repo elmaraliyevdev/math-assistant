@@ -1,0 +1,228 @@
+{
+  "schemaVersion": "1.0.0",
+  "gameVersion": {
+    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+    "projectId": "f0e1d2c3-b4a5-9678-9012-3456789abcde",
+    "versionNumber": 1,
+    "status": "draft",
+    "createdAt": "2026-06-14T10:00:00Z",
+    "label": "Base to Hold and Win",
+    "source": "dsl-compiler"
+  },
+  "metadata": {
+    "title": "Base Hold and Win",
+    "rtpTarget": {
+      "percent": 96,
+      "tolerance": 0.1
+    }
+  },
+  "gameConfig": {
+    "grid": {
+      "reels": 5,
+      "rows": 3,
+      "indexOrigin": "top-left"
+    },
+    "defaultReelSetId": "base_game"
+  },
+  "symbols": {
+    "BONUS": {
+      "id": "BONUS",
+      "type": "bonus",
+      "pays": false
+    },
+    "H1": {
+      "id": "H1",
+      "displayName": "High 1",
+      "type": "regular"
+    },
+    "L1": {
+      "id": "L1",
+      "displayName": "Low 1",
+      "type": "regular"
+    }
+  },
+  "reelSets": {
+    "base_game": {
+      "id": "base_game",
+      "reels": [
+        {"reelIndex": 0, "symbols": ["L1", "H1", "BONUS", "L1", "H1"]},
+        {"reelIndex": 1, "symbols": ["L1", "H1", "BONUS", "L1", "H1"]},
+        {"reelIndex": 2, "symbols": ["L1", "H1", "BONUS", "L1", "H1"]},
+        {"reelIndex": 3, "symbols": ["L1", "H1", "BONUS", "L1", "H1"]},
+        {"reelIndex": 4, "symbols": ["L1", "H1", "BONUS", "L1", "H1"]}
+      ]
+    },
+    "hold_and_win": {
+      "id": "hold_and_win",
+      "reels": [
+        {"reelIndex": 0, "symbols": ["BONUS", "L1", "BONUS", "L1", "BONUS"]},
+        {"reelIndex": 1, "symbols": ["L1", "BONUS", "L1", "BONUS", "L1"]},
+        {"reelIndex": 2, "symbols": ["BONUS", "BONUS", "L1", "L1", "BONUS"]},
+        {"reelIndex": 3, "symbols": ["L1", "BONUS", "L1", "BONUS", "BONUS"]},
+        {"reelIndex": 4, "symbols": ["BONUS", "L1", "BONUS", "BONUS", "L1"]}
+      ]
+    }
+  },
+  "paytable": {
+    "lines": [{"index": 1, "path": [1, 1, 1, 1, 1]}],
+    "pays": [{"symbolId": "H1", "count": 5, "multiplier": 100}]
+  },
+  "winModel": {
+    "type": "lines",
+    "direction": "left-to-right",
+    "scatterPaysOnReels": true,
+    "highestWinOnlyPerLine": true
+  },
+  "betModel": {
+    "type": "lines",
+    "lineCount": 20,
+    "coinValueScale": 100,
+    "defaultCoinValue": 1,
+    "minCoinValue": 1,
+    "maxCoinValue": 1
+  },
+  "plugins": {
+    "base_main": {
+      "refId": "base_main",
+      "pluginId": "core.base-game",
+      "pluginVersion": "1.0.0",
+      "configSchemaVersion": "1.0.0",
+      "capabilities": ["spin.grid", "win.lines", "win.scatter"]
+    },
+    "haw_main": {
+      "refId": "haw_main",
+      "pluginId": "core.hold-and-win",
+      "pluginVersion": "1.0.0",
+      "configSchemaVersion": "1.0.0",
+      "capabilities": ["spin.grid", "state.multistep", "jackpot.local"]
+    }
+  },
+  "stateMachines": {
+    "main": {
+      "id": "main",
+      "initialStateId": "BASE",
+      "states": {
+        "BASE": {
+          "id": "BASE",
+          "pluginRefId": "base_main",
+          "stateType": "atomic_spin",
+          "terminal": false,
+          "rtpCategory": "BASE",
+          "pluginConfig": {
+            "reelSetId": "base_game",
+            "bonusTriggers": [
+              {
+                "symbolId": "BONUS",
+                "minCount": 6,
+                "emitTrigger": "HOLD_AND_WIN"
+              }
+            ]
+          },
+          "transitions": [
+            {
+              "id": "t_base_to_haw",
+              "trigger": "HOLD_AND_WIN",
+              "priority": 100,
+              "priorityTier": "FEATURE_ENTRY_SPAWN",
+              "effect": "spawn",
+              "targetMachineId": "hold_and_win"
+            },
+            {
+              "id": "t_spin",
+              "trigger": "SPIN_COMPLETE",
+              "priority": 1000,
+              "priorityTier": "FALLBACK",
+              "effect": "stay",
+              "targetStateId": "BASE"
+            }
+          ]
+        }
+      }
+    },
+    "hold_and_win": {
+      "id": "hold_and_win",
+      "initialStateId": "HAW_RESPINS",
+      "states": {
+        "HAW_RESPINS": {
+          "id": "HAW_RESPINS",
+          "pluginRefId": "haw_main",
+          "stateType": "multi_step",
+          "terminal": false,
+          "rtpCategory": "HOLD_AND_WIN",
+          "pluginConfig": {
+            "reelSetId": "hold_and_win",
+            "triggerSymbolId": "BONUS",
+            "triggerSymbolCount": 6,
+            "initialRespins": 3,
+            "gridCapacity": 15,
+            "symbolValues": {"BONUS": 2},
+            "jackpotTiers": {
+              "mini": 20,
+              "major": 100,
+              "grand": 500
+            },
+            "fillEndsFeature": true
+          },
+          "transitions": [
+            {
+              "id": "t_haw_pop",
+              "trigger": "FEATURE_COMPLETE",
+              "priority": 900,
+              "priorityTier": "FEATURE_EXIT",
+              "effect": "pop"
+            }
+          ],
+          "progression": {
+            "counterField": "respinsRemaining",
+            "decrementsOn": "each_step",
+            "minValue": 0,
+            "terminatesWhen": "respinsRemaining == 0 OR gridFull == true"
+          }
+        }
+      }
+    }
+  },
+  "session": {
+    "rootMachineId": "main",
+    "maxStackDepth": 4,
+    "spinLoopMode": "single_chain",
+    "contextInheritancePolicy": "mvp-v1",
+    "runtimeLimits": {
+      "maxStepsPerSpinChain": 500,
+      "maxRespinsPerFeature": 100
+    }
+  },
+  "exposure": {
+    "maxWinMinorUnits": 1200000,
+    "maxWinMultiplier": 5000,
+    "capScope": "session_spin_chain",
+    "enforceCap": true,
+    "validationMode": "strict"
+  },
+  "determinism": {
+    "rngAlgorithm": "PCG64",
+    "rngAlgorithmVersion": "1.0",
+    "seedDerivationPolicy": "v1-hash-shard",
+    "moneyRepresentation": "fixed_minor_units",
+    "moneyScale": 10000
+  },
+  "precedence": {
+    "triggerOrder": ["HOLD_AND_WIN", "FEATURE_COMPLETE", "SPIN_COMPLETE"]
+  },
+  "extensions": {},
+  "rtpCategoryRegistry": {
+    "extends": "platform:v1",
+    "categories": {
+      "BASE": {
+        "label": "Base Game",
+        "parent": null,
+        "decompositionGroup": "base"
+      },
+      "HOLD_AND_WIN": {
+        "label": "Hold and Win",
+        "parent": null,
+        "decompositionGroup": "feature"
+      }
+    }
+  }
+}

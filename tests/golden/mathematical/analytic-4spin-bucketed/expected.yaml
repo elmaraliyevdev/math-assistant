@@ -1,0 +1,39 @@
+version: "1.0.0"
+locked: true
+metrics:
+  rtp: 1.875
+  uncappedRtp: 2.0
+  hitFrequency: 0.75
+  winningSpinCount: 3
+  losingSpinCount: 1
+  meanWinMinorUnits: 1875.0
+  variance: 3796875.0
+  standardDeviation: 1948.557158514987
+  coefficientOfVariation: 1.0392304845413263
+  truncationRate: 0.25
+  totalTruncatedMinorUnits: 500
+  cappedRtp: 1.875
+  uncappedRtpExposure: 2.0
+  rtpDifference: 0.125
+  confidenceLowerBound: -0.33
+  confidenceUpperBound: 4.08
+  confidenceLevel: 0.95
+  distributionBuckets:
+    0x: 1
+    0-1x: 1
+    1-5x: 2
+    5-10x: 0
+    10-50x: 0
+    50-100x: 0
+    100-500x: 0
+    500x+: 0
+  featureFrequencies:
+    FREE_SPINS:
+      triggerCount: 1
+      frequency: 0.25
+      oneInX: 4.0
+  jackpotFrequencies:
+    MINI:
+      triggerCount: 1
+      frequency: 0.25
+      oneInX: 4.0

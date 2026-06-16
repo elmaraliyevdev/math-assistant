@@ -1,0 +1,1097 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>events: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">math-assistant/runtime-core/internal/runtime/events/events.go (97.3%)</option>
+				
+				<option value="file1">math-assistant/runtime-core/internal/runtime/rng/pcg64.go (100.0%)</option>
+				
+				<option value="file2">math-assistant/runtime-core/internal/runtime/rng/service.go (100.0%)</option>
+				
+				<option value="file3">math-assistant/runtime-core/internal/runtime/session/session.go (96.5%)</option>
+				
+				<option value="file4">math-assistant/runtime-core/runtime/events.go (100.0%)</option>
+				
+				<option value="file5">math-assistant/runtime-core/runtime/frame_context.go (100.0%)</option>
+				
+				<option value="file6">math-assistant/runtime-core/runtime/rng.go (100.0%)</option>
+				
+				<option value="file7">math-assistant/runtime-core/runtime/session.go (100.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package events
+
+import (
+        "crypto/sha256"
+        "encoding/hex"
+        "encoding/json"
+)
+
+const EventVersion = "1.0.0"
+
+type LogMode string
+
+const (
+        LogModeNone            LogMode = "none"
+        LogModeTransitionsOnly LogMode = "transitions_only"
+        LogModeFull            LogMode = "full"
+        LogModeReplay          LogMode = "replay"
+)
+
+type Type string
+
+const (
+        TypeSpinChainStart       Type = "SPIN_CHAIN_START"
+        TypeSpinChainEnd         Type = "SPIN_CHAIN_END"
+        TypeFramePush            Type = "FRAME_PUSH"
+        TypeFramePop             Type = "FRAME_POP"
+        TypeStateEnter           Type = "STATE_ENTER"
+        TypeStateReenter         Type = "STATE_REENTER"
+        TypeGridResult           Type = "GRID_RESULT"
+        TypeWinEvaluated         Type = "WIN_EVALUATED"
+        TypeTriggerEmitted       Type = "TRIGGER_EMITTED"
+        TypeTransitionTaken      Type = "TRANSITION_TAKEN"
+        TypeMultiplierApplied    Type = "MULTIPLIER_APPLIED"
+        TypeExposureCapApplied   Type = "EXPOSURE_CAP_APPLIED"
+        TypeFeatureCounterUpdate Type = "FEATURE_COUNTER_UPDATE"
+        TypeRuntimeLimitHit      Type = "RUNTIME_LIMIT_HIT"
+        TypeRuntimeFault         Type = "RUNTIME_FAULT"
+        TypeRNGDraw              Type = "RNG_DRAW"
+        TypeGuardEvaluated       Type = "GUARD_EVALUATED"
+)
+
+type Correlation struct {
+        SimulationRunID        string `json:"simulationRunId"`
+        SpinChainIndex         int64  `json:"spinChainIndex"`
+        GameVersionContentHash string `json:"gameVersionContentHash"`
+        EngineVersion          string `json:"engineVersion"`
+}
+
+type Context struct {
+        StackDepth int    `json:"stackDepth"`
+        MachineID  string `json:"machineId,omitempty"`
+        StateID    string `json:"stateId,omitempty"`
+        FrameID    string `json:"frameId,omitempty"`
+}
+
+type Event struct {
+        EventVersion string         `json:"eventVersion"`
+        Sequence     int            `json:"sequence"`
+        EventType    Type           `json:"eventType"`
+        TimestampUs  int64          `json:"timestampUs,omitempty"`
+        Correlation  Correlation    `json:"correlation"`
+        Context      Context        `json:"context"`
+        Payload      map[string]any `json:"payload"`
+}
+
+type replayUnit struct {
+        EventVersion string         `json:"eventVersion"`
+        Sequence     int            `json:"sequence"`
+        EventType    Type           `json:"eventType"`
+        Correlation  Correlation    `json:"correlation"`
+        Context      Context        `json:"context"`
+        Payload      map[string]any `json:"payload"`
+}
+
+func (e Event) ReplayUnit() replayUnit <span class="cov4" title="3">{
+        return replayUnit{
+                EventVersion: e.EventVersion,
+                Sequence:     e.Sequence,
+                EventType:    e.EventType,
+                Correlation:  e.Correlation,
+                Context:      e.Context,
+                Payload:      e.Payload,
+        }
+}</span>
+
+type Logger struct {
+        mode        LogMode
+        correlation Correlation
+        sequence    int
+        events      []Event
+}
+
+func NewLogger(mode LogMode, correlation Correlation) *Logger <span class="cov7" title="8">{
+        if mode == "" </span><span class="cov1" title="1">{
+                mode = LogModeNone
+        }</span>
+        <span class="cov7" title="8">return &amp;Logger{mode: mode, correlation: correlation}</span>
+}
+
+func (l *Logger) Mode() LogMode <span class="cov1" title="1">{
+        return l.mode
+}</span>
+
+func (l *Logger) Append(event Event) <span class="cov7" title="8">{
+        if !ShouldEmit(event.EventType, l.mode) </span><span class="cov3" title="2">{
+                return
+        }</span>
+        <span class="cov6" title="6">event.EventVersion = EventVersion
+        event.Sequence = l.sequence
+        event.Correlation = l.correlation
+        l.sequence++
+        l.events = append(l.events, event)</span>
+}
+
+func (l *Logger) Events() []Event <span class="cov6" title="5">{
+        out := make([]Event, len(l.events))
+        copy(out, l.events)
+        return out
+}</span>
+
+func (l *Logger) Hash() string <span class="cov4" title="3">{
+        if len(l.events) == 0 </span><span class="cov1" title="1">{
+                return ""
+        }</span>
+        <span class="cov3" title="2">h := sha256.New()
+        for _, event := range l.events </span><span class="cov3" title="2">{
+                line, err := json.Marshal(event.ReplayUnit())
+                if err != nil </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+                <span class="cov3" title="2">h.Write(line)
+                h.Write([]byte{'\n'})</span>
+        }
+        <span class="cov3" title="2">return hex.EncodeToString(h.Sum(nil))</span>
+}
+
+func ShouldEmit(eventType Type, mode LogMode) bool <span class="cov10" title="16">{
+        switch mode </span>{
+        case LogModeNone:<span class="cov3" title="2">
+                return false</span>
+        case LogModeTransitionsOnly:<span class="cov5" title="4">
+                return isTransitionModeEvent(eventType)</span>
+        case LogModeFull:<span class="cov7" title="7">
+                return isMVPEvent(eventType)</span>
+        case LogModeReplay:<span class="cov3" title="2">
+                return isMVPEvent(eventType) || eventType == TypeRNGDraw || eventType == TypeGuardEvaluated</span>
+        default:<span class="cov1" title="1">
+                return false</span>
+        }
+}
+
+func isTransitionModeEvent(t Type) bool <span class="cov6" title="6">{
+        switch t </span>{
+        case TypeSpinChainStart, TypeSpinChainEnd, TypeFramePush, TypeFramePop,
+                TypeStateEnter, TypeTransitionTaken:<span class="cov4" title="3">
+                return true</span>
+        default:<span class="cov4" title="3">
+                return false</span>
+        }
+}
+
+func isMVPEvent(t Type) bool <span class="cov8" title="11">{
+        switch t </span>{
+        case TypeSpinChainStart, TypeSpinChainEnd, TypeFramePush, TypeFramePop,
+                TypeStateEnter, TypeStateReenter, TypeGridResult, TypeWinEvaluated,
+                TypeTriggerEmitted, TypeTransitionTaken, TypeMultiplierApplied,
+                TypeExposureCapApplied, TypeFeatureCounterUpdate, TypeRuntimeLimitHit,
+                TypeRuntimeFault:<span class="cov7" title="7">
+                return true</span>
+        default:<span class="cov5" title="4">
+                return false</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package rng
+
+// PCG64 is a permuted congruential generator (64-bit output).
+// Reference: O'Neill, PCG: A Family of Simple Fast Space-Efficient Statistically Good Algorithms for Random Number Generation.
+type PCG64 struct {
+        state uint64
+        inc   uint64
+}
+
+func newPCG64(initState, initSeq uint64) *PCG64 <span class="cov3" title="13">{
+        if initSeq == 0 </span><span class="cov1" title="1">{
+                initSeq = 1
+        }</span>
+        <span class="cov3" title="13">p := &amp;PCG64{inc: (initSeq &lt;&lt; 1) | 1}
+        p.state = 0
+        p.NextUint64()
+        p.state += initState
+        p.NextUint64()
+        return p</span>
+}
+
+func (p *PCG64) NextUint64() uint64 <span class="cov10" title="5077">{
+        oldState := p.state
+        p.state = oldState*6364136223846793005 + p.inc
+        xorshifted := uint32(((oldState &gt;&gt; 18) ^ oldState) &gt;&gt; 27)
+        rot := oldState &gt;&gt; 59
+        return (uint64(xorshifted) &gt;&gt; rot) | (uint64(xorshifted) &lt;&lt; ((-int(rot)) &amp; 31))
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package rng
+
+import (
+        "crypto/hmac"
+        "crypto/sha256"
+        "encoding/binary"
+        "fmt"
+)
+
+type Algorithm string
+
+const AlgorithmPCG64 Algorithm = "PCG64"
+
+type DerivationPolicy string
+
+const PolicyV1HashShard DerivationPolicy = "v1-hash-shard"
+
+type Config struct {
+        Algorithm Algorithm
+        Policy    DerivationPolicy
+}
+
+type Service struct {
+        algorithm Algorithm
+        policy    DerivationPolicy
+}
+
+func NewService(cfg Config) (*Service, error) <span class="cov3" title="8">{
+        if cfg.Algorithm == "" </span><span class="cov3" title="7">{
+                cfg.Algorithm = AlgorithmPCG64
+        }</span>
+        <span class="cov3" title="8">if cfg.Policy == "" </span><span class="cov3" title="7">{
+                cfg.Policy = PolicyV1HashShard
+        }</span>
+        <span class="cov3" title="8">if cfg.Algorithm != AlgorithmPCG64 </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("unsupported rng algorithm %q", cfg.Algorithm)
+        }</span>
+        <span class="cov3" title="7">if cfg.Policy != PolicyV1HashShard </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("unsupported seed derivation policy %q", cfg.Policy)
+        }</span>
+        <span class="cov2" title="6">return &amp;Service{algorithm: cfg.Algorithm, policy: cfg.Policy}, nil</span>
+}
+
+type ChainScope struct {
+        chainSeed []byte
+}
+
+func (s *Service) NewChainScope(masterSeed []byte, shardIndex int, simulationRunID string, spinChainIndex int64) *ChainScope <span class="cov3" title="9">{
+        shardSeed := deriveSeed(masterSeed, encodeInt(shardIndex), []byte(simulationRunID))
+        chainSeed := deriveSeed(shardSeed, encodeInt64(spinChainIndex))
+        return &amp;ChainScope{chainSeed: chainSeed}
+}</span>
+
+func (c *ChainScope) ChainSeed() []byte <span class="cov3" title="8">{
+        out := make([]byte, len(c.chainSeed))
+        copy(out, c.chainSeed)
+        return out
+}</span>
+
+type FrameStream struct {
+        frameStreamSeed []byte
+}
+
+func (c *ChainScope) FrameStream(frameID string) *FrameStream <span class="cov1" title="2">{
+        seed := deriveSeed(c.chainSeed, []byte(frameID))
+        return &amp;FrameStream{frameStreamSeed: seed}
+}</span>
+
+func (f *FrameStream) StepRNG(stepIndex int) *RNG <span class="cov2" title="3">{
+        label := append([]byte("step:"), encodeInt(stepIndex)...)
+        seed := deriveSeed(f.frameStreamSeed, label)
+        return newRNG(seed)
+}</span>
+
+func (f *FrameStream) MultiplierRNG(multiplierRefID string, applyIndex int) *RNG <span class="cov1" title="2">{
+        label := append([]byte("mult:"), []byte(multiplierRefID)...)
+        label = append(label, ':')
+        label = append(label, encodeInt(applyIndex)...)
+        seed := deriveSeed(f.frameStreamSeed, label)
+        return newRNG(seed)
+}</span>
+
+func deriveSeed(key []byte, parts ...[]byte) []byte <span class="cov4" title="25">{
+        mac := hmac.New(sha256.New, key)
+        for _, part := range parts </span><span class="cov4" title="34">{
+                mac.Write(part)
+        }</span>
+        <span class="cov4" title="25">sum := mac.Sum(nil)
+        return sum</span>
+}
+
+func encodeInt(v int) []byte <span class="cov3" title="14">{
+        buf := make([]byte, 8)
+        binary.BigEndian.PutUint64(buf, uint64(v))
+        return buf
+}</span>
+
+func encodeInt64(v int64) []byte <span class="cov3" title="9">{
+        buf := make([]byte, 8)
+        binary.BigEndian.PutUint64(buf, uint64(v))
+        return buf
+}</span>
+
+func seedToPCG64State(seed []byte) (state, seq uint64) <span class="cov3" title="10">{
+        if len(seed) &lt; 16 </span><span class="cov2" title="4">{
+                padded := make([]byte, 16)
+                copy(padded, seed)
+                seed = padded
+        }</span>
+        <span class="cov3" title="10">state = binary.BigEndian.Uint64(seed[:8])
+        seq = binary.BigEndian.Uint64(seed[8:16])
+        if seq == 0 </span><span class="cov2" title="5">{
+                seq = 54
+        }</span>
+        <span class="cov3" title="10">return state, seq</span>
+}
+
+func newRNG(seed []byte) *RNG <span class="cov3" title="8">{
+        state, seq := seedToPCG64State(seed)
+        return &amp;RNG{pcg: newPCG64(state, seq)}
+}</span>
+
+// RNG implements the plugin-facing draw interface.
+type RNG struct {
+        pcg    *PCG64
+        drawID int
+}
+
+func (r *RNG) NextUint64() uint64 <span class="cov3" title="7">{
+        r.drawID++
+        return r.pcg.NextUint64()
+}</span>
+
+func (r *RNG) NextInt(n int) int <span class="cov10" title="5003">{
+        if n &lt;= 0 </span><span class="cov1" title="1">{
+                panic(fmt.Sprintf("rng: NextInt requires n &gt; 0, got %d", n))</span>
+        }
+        <span class="cov9" title="5002">if n == 1 </span><span class="cov1" title="1">{
+                r.drawID++
+                return 0
+        }</span>
+        <span class="cov9" title="5001">max := uint64(n)
+        limit := (^uint64(0) / max) * max
+        for </span><span class="cov9" title="5001">{
+                x := r.pcg.NextUint64()
+                if x &lt; limit </span><span class="cov9" title="5001">{
+                        r.drawID++
+                        return int(x % max)
+                }</span>
+        }
+}
+
+func (r *RNG) DrawID() int <span class="cov2" title="3">{
+        return r.drawID
+}</span>
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package session
+
+import (
+        "crypto/sha256"
+        "encoding/hex"
+        "encoding/json"
+        "fmt"
+
+        "math-assistant/runtime-core/internal/domain"
+)
+
+type EventLogMode string
+
+type RNGAlgorithm string
+
+type RNGPolicy string
+
+type RNGConfig struct {
+        Algorithm RNGAlgorithm
+        Policy    RNGPolicy
+}
+
+type Params struct {
+        Game            *domain.GameVersion
+        EngineVersion   string
+        MasterSeed      []byte
+        SpinChainIndex  int64
+        ShardIndex      int
+        SimulationRunID string
+        BetMinorUnits   int64
+        EventLogMode    EventLogMode
+        RNGConfig       RNGConfig
+}
+
+type BetContext struct {
+        LineCount          int
+        CoinValueScale     int
+        DefaultCoinValue   int
+        TotalBetMinorUnits int64
+        BetModelType       string
+}
+
+type EffectiveLimits struct {
+        MaxStepsPerSpinChain   int
+        MaxFramesPerChain      int
+        MaxTransitionsPerStep  int
+        MaxRespinsPerFeature   int
+        MaxEventsPerChain      int
+        MaxWallClockMsPerChain int
+}
+
+type ExposureState struct {
+        EnforceCap        bool
+        EffectiveCapMinor int64
+        CapScope          string
+        MaxWinMinorUnits  int64
+        MaxWinMultiplier  int64
+}
+
+type Session struct {
+        GameVersionContentHash string
+        EngineVersion          string
+        SpinChainIndex         int64
+        Bet                    BetContext
+        TotalBetMinorUnits     int64
+        InheritancePolicy      string
+        Limits                 EffectiveLimits
+        Exposure               ExposureState
+}
+
+func New(params Params) (*Session, error) <span class="cov10" title="18">{
+        if params.Game == nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("game is required")
+        }</span>
+        <span class="cov9" title="17">if params.EngineVersion == "" </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("engineVersion is required")
+        }</span>
+        <span class="cov9" title="16">if len(params.MasterSeed) == 0 </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("masterSeed is required")
+        }</span>
+        <span class="cov9" title="15">if params.SimulationRunID == "" </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("simulationRunID is required")
+        }</span>
+        <span class="cov9" title="14">if err := validateDeterminism(params.Game); err != nil </span><span class="cov4" title="3">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="11">hash, err := contentHash(params.Game)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="11">bet, totalBet, err := resolveBet(params.Game, params.BetMinorUnits)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="11">limits := resolveLimits(params.Game)
+        exposure := resolveExposure(params.Game, totalBet)
+        policy := params.Game.Session.ContextInheritancePolicy
+        if policy == "" </span><span class="cov1" title="1">{
+                policy = "mvp-v1"
+        }</span>
+        <span class="cov8" title="11">return &amp;Session{
+                GameVersionContentHash: hash,
+                EngineVersion:          params.EngineVersion,
+                SpinChainIndex:         params.SpinChainIndex,
+                Bet:                    bet,
+                TotalBetMinorUnits:     totalBet,
+                InheritancePolicy:      policy,
+                Limits:                 limits,
+                Exposure:               exposure,
+        }, nil</span>
+}
+
+func validateDeterminism(game *domain.GameVersion) error <span class="cov9" title="14">{
+        d := game.Determinism
+        if d.RngAlgorithm != "PCG64" </span><span class="cov1" title="1">{
+                return fmt.Errorf("unsupported determinism.rngAlgorithm %q (MVP requires PCG64)", d.RngAlgorithm)
+        }</span>
+        <span class="cov8" title="13">if d.SeedDerivationPolicy != "" &amp;&amp; d.SeedDerivationPolicy != "v1-hash-shard" </span><span class="cov1" title="1">{
+                return fmt.Errorf("unsupported determinism.seedDerivationPolicy %q", d.SeedDerivationPolicy)
+        }</span>
+        <span class="cov8" title="12">if d.MoneyRepresentation != "" &amp;&amp; d.MoneyRepresentation != "fixed_minor_units" </span><span class="cov1" title="1">{
+                return fmt.Errorf("unsupported determinism.moneyRepresentation %q", d.MoneyRepresentation)
+        }</span>
+        <span class="cov8" title="11">return nil</span>
+}
+
+func contentHash(game *domain.GameVersion) (string, error) <span class="cov8" title="11">{
+        if game.ContentHash != "" </span><span class="cov8" title="10">{
+                return game.ContentHash, nil
+        }</span>
+        <span class="cov1" title="1">raw, err := json.Marshal(game)
+        if err != nil </span><span class="cov0" title="0">{
+                return "", fmt.Errorf("marshal game for content hash: %w", err)
+        }</span>
+        <span class="cov1" title="1">sum := sha256.Sum256(raw)
+        return hex.EncodeToString(sum[:]), nil</span>
+}
+
+func resolveBet(game *domain.GameVersion, override int64) (BetContext, int64, error) <span class="cov8" title="11">{
+        bet := game.BetModel
+        if override &gt; 0 </span><span class="cov1" title="1">{
+                return BetContext{
+                        LineCount:          bet.LineCount,
+                        CoinValueScale:     bet.CoinValueScale,
+                        DefaultCoinValue:   bet.DefaultCoinValue,
+                        TotalBetMinorUnits: override,
+                        BetModelType:       bet.Type,
+                }, override, nil
+        }</span>
+        <span class="cov8" title="10">if bet.TotalBetMinorUnits &gt; 0 </span><span class="cov1" title="1">{
+                return BetContext{
+                        LineCount:          bet.LineCount,
+                        CoinValueScale:     bet.CoinValueScale,
+                        DefaultCoinValue:   bet.DefaultCoinValue,
+                        TotalBetMinorUnits: int64(bet.TotalBetMinorUnits),
+                        BetModelType:       bet.Type,
+                }, int64(bet.TotalBetMinorUnits), nil
+        }</span>
+        <span class="cov7" title="9">lines := bet.LineCount
+        if lines &lt;= 0 </span><span class="cov1" title="1">{
+                lines = 1
+        }</span>
+        <span class="cov7" title="9">scale := bet.CoinValueScale
+        if scale &lt;= 0 </span><span class="cov1" title="1">{
+                scale = 1
+        }</span>
+        <span class="cov7" title="9">coin := bet.DefaultCoinValue
+        if coin &lt;= 0 </span><span class="cov1" title="1">{
+                coin = 1
+        }</span>
+        <span class="cov7" title="9">total := int64(lines * coin * scale)
+        return BetContext{
+                LineCount:          bet.LineCount,
+                CoinValueScale:     bet.CoinValueScale,
+                DefaultCoinValue:   bet.DefaultCoinValue,
+                TotalBetMinorUnits: total,
+                BetModelType:       bet.Type,
+        }, total, nil</span>
+}
+
+func resolveLimits(game *domain.GameVersion) EffectiveLimits <span class="cov8" title="11">{
+        defaults := platformLimits()
+        limits := defaults
+        if game.Session.RuntimeLimits != nil </span><span class="cov8" title="10">{
+                rl := game.Session.RuntimeLimits
+                if rl.MaxStepsPerSpinChain &gt; 0 </span><span class="cov8" title="10">{
+                        limits.MaxStepsPerSpinChain = rl.MaxStepsPerSpinChain
+                }</span>
+                <span class="cov8" title="10">if rl.MaxFramesPerChain &gt; 0 </span><span class="cov1" title="1">{
+                        limits.MaxFramesPerChain = rl.MaxFramesPerChain
+                }</span>
+                <span class="cov8" title="10">if rl.MaxTransitionsPerStep &gt; 0 </span><span class="cov1" title="1">{
+                        limits.MaxTransitionsPerStep = rl.MaxTransitionsPerStep
+                }</span>
+                <span class="cov8" title="10">if rl.MaxRespinsPerFeature &gt; 0 </span><span class="cov1" title="1">{
+                        limits.MaxRespinsPerFeature = rl.MaxRespinsPerFeature
+                }</span>
+                <span class="cov8" title="10">if rl.MaxEventsPerChain &gt; 0 </span><span class="cov8" title="10">{
+                        limits.MaxEventsPerChain = rl.MaxEventsPerChain
+                }</span>
+                <span class="cov8" title="10">if rl.MaxWallClockMsPerChain &gt; 0 </span><span class="cov1" title="1">{
+                        limits.MaxWallClockMsPerChain = rl.MaxWallClockMsPerChain
+                }</span>
+        }
+        <span class="cov8" title="11">maxStack := game.Session.MaxStackDepth
+        if maxStack &lt;= 0 </span><span class="cov1" title="1">{
+                maxStack = 8
+        }</span>
+        <span class="cov8" title="11">if limits.MaxFramesPerChain &lt;= 0 || limits.MaxFramesPerChain &gt; maxStack </span><span class="cov7" title="9">{
+                limits.MaxFramesPerChain = maxStack
+        }</span>
+        <span class="cov8" title="11">return limits</span>
+}
+
+func platformLimits() EffectiveLimits <span class="cov8" title="11">{
+        return EffectiveLimits{
+                MaxStepsPerSpinChain:   500,
+                MaxFramesPerChain:      8,
+                MaxTransitionsPerStep:  8,
+                MaxRespinsPerFeature:   100,
+                MaxEventsPerChain:      10000,
+                MaxWallClockMsPerChain: 0,
+        }
+}</span>
+
+func resolveExposure(game *domain.GameVersion, totalBet int64) ExposureState <span class="cov8" title="11">{
+        exp := game.Exposure
+        state := ExposureState{
+                EnforceCap:       exp.EnforceCap,
+                CapScope:         exp.CapScope,
+                MaxWinMinorUnits: int64(exp.MaxWinMinorUnits),
+                MaxWinMultiplier: int64(exp.MaxWinMultiplier),
+        }
+        cap := state.MaxWinMinorUnits
+        if exp.MaxWinMultiplier &gt; 0 &amp;&amp; totalBet &gt; 0 </span><span class="cov8" title="10">{
+                multCap := int64(exp.MaxWinMultiplier) * totalBet
+                if cap == 0 || multCap &lt; cap </span><span class="cov3" title="2">{
+                        cap = multCap
+                }</span>
+        }
+        <span class="cov8" title="11">state.EffectiveCapMinor = cap
+        return state</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package runtime
+
+import (
+        "encoding/json"
+
+        ie "math-assistant/runtime-core/internal/runtime/events"
+)
+
+// EventType is a runtime event discriminator (Canonical Schema §12.3).
+type EventType = ie.Type
+
+const (
+        EventSpinChainStart      = ie.TypeSpinChainStart
+        EventSpinChainEnd        = ie.TypeSpinChainEnd
+        EventFramePush           = ie.TypeFramePush
+        EventFramePop            = ie.TypeFramePop
+        EventStateEnter          = ie.TypeStateEnter
+        EventStateReenter        = ie.TypeStateReenter
+        EventGridResult          = ie.TypeGridResult
+        EventWinEvaluated        = ie.TypeWinEvaluated
+        EventTriggerEmitted      = ie.TypeTriggerEmitted
+        EventTransitionTaken     = ie.TypeTransitionTaken
+        EventMultiplierApplied   = ie.TypeMultiplierApplied
+        EventExposureCapApplied  = ie.TypeExposureCapApplied
+        EventFeatureCounterUpdate = ie.TypeFeatureCounterUpdate
+        EventRuntimeLimitHit     = ie.TypeRuntimeLimitHit
+        EventRuntimeFault        = ie.TypeRuntimeFault
+        EventRNGDraw             = ie.TypeRNGDraw
+        EventGuardEvaluated      = ie.TypeGuardEvaluated
+)
+
+// Event is the canonical runtime event envelope (Canonical Schema §12.2).
+type Event = ie.Event
+
+// EventCorrelation links events to a simulation run and canonical snapshot.
+type EventCorrelation = ie.Correlation
+
+// EventContext identifies the stack frame active when an event was emitted.
+type EventContext = ie.Context
+
+// NewEventLogger constructs an event logger for a spin chain.
+func NewEventLogger(mode EventLogMode, correlation EventCorrelation) *EventLogger <span class="cov10" title="3">{
+        return &amp;EventLogger{inner: ie.NewLogger(ie.LogMode(mode), correlation)}
+}</span>
+
+// EventLogger records runtime events with monotonic sequencing and replay hashing.
+type EventLogger struct {
+        inner *ie.Logger
+}
+
+// Mode returns the configured event log mode.
+func (l *EventLogger) Mode() EventLogMode <span class="cov1" title="1">{
+        return EventLogMode(l.inner.Mode())
+}</span>
+
+// Append records an event when permitted by the active log mode.
+func (l *EventLogger) Append(event Event) <span class="cov1" title="1">{
+        l.inner.Append(event)
+}</span>
+
+// Events returns emitted events in sequence order.
+func (l *EventLogger) Events() []Event <span class="cov1" title="1">{
+        return l.inner.Events()
+}</span>
+
+// Hash returns SHA-256 hex over canonical JSON lines excluding timestampUs.
+func (l *EventLogger) Hash() string <span class="cov1" title="1">{
+        return l.inner.Hash()
+}</span>
+
+// ShouldEmit reports whether an event type would be recorded in the given mode.
+func ShouldEmit(eventType EventType, mode EventLogMode) bool <span class="cov1" title="1">{
+        return ie.ShouldEmit(eventType, ie.LogMode(mode))
+}</span>
+
+// CanonicalEventLine JSON-marshals an event for replay hashing (timestampUs omitted).
+func CanonicalEventLine(event Event) ([]byte, error) <span class="cov1" title="1">{
+        return json.Marshal(event.ReplayUnit())
+}</span>
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package runtime
+
+// HeldSymbol records a symbol held on the grid for hold-and-win features (Runtime Core §15.3).
+type HeldSymbol struct {
+        Reel     int
+        Row      int
+        SymbolID string
+}
+
+// FrameContext is mutable per-stack-frame state (Runtime Core §6.2, §15.3).
+// Populated by plugins in later phases; R1 defines the value object only.
+type FrameContext struct {
+        SpinsRemaining   int
+        RespinsRemaining int
+        HeldSymbols      []HeldSymbol
+        ActiveMultiplier string
+        FrameLocalState  map[string]any
+}
+
+// NewFrameContext returns an empty frame context for a newly pushed stack frame.
+func NewFrameContext() FrameContext <span class="cov8" title="1">{
+        return FrameContext{
+                FrameLocalState: make(map[string]any),
+        }
+}</span>
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package runtime
+
+import irng "math-assistant/runtime-core/internal/runtime/rng"
+
+// RNG is the plugin-facing random number interface (Runtime Core §13.4).
+type RNG interface {
+        NextUint64() uint64
+        NextInt(n int) int
+        DrawID() int
+}
+
+// SeedDerivationPolicy identifies the HMAC seed derivation scheme.
+type SeedDerivationPolicy string
+
+const (
+        SeedDerivationV1HashShard SeedDerivationPolicy = "v1-hash-shard"
+)
+
+// RNGAlgorithm identifies the PRNG algorithm family.
+type RNGAlgorithm string
+
+const (
+        RNGAlgorithmPCG64 RNGAlgorithm = "PCG64"
+)
+
+// RNGServiceConfig configures deterministic RNG derivation.
+type RNGServiceConfig struct {
+        Algorithm RNGAlgorithm
+        Policy    SeedDerivationPolicy
+}
+
+// DefaultRNGServiceConfig returns MVP defaults from Canonical Appendix A.
+func DefaultRNGServiceConfig() RNGServiceConfig <span class="cov9" title="5">{
+        return RNGServiceConfig{
+                Algorithm: RNGAlgorithmPCG64,
+                Policy:    SeedDerivationV1HashShard,
+        }
+}</span>
+
+// RNGService derives scoped deterministic RNG streams for spin chains.
+type RNGService struct {
+        inner *irng.Service
+}
+
+// NewRNGService constructs an RNG service.
+func NewRNGService(cfg RNGServiceConfig) (*RNGService, error) <span class="cov10" title="6">{
+        s, err := irng.NewService(irng.Config{
+                Algorithm: irng.Algorithm(cfg.Algorithm),
+                Policy:    irng.DerivationPolicy(cfg.Policy),
+        })
+        if err != nil </span><span class="cov4" title="2">{
+                return nil, err
+        }</span>
+        <span class="cov7" title="4">return &amp;RNGService{inner: s}, nil</span>
+}
+
+// ChainScope holds derived seeds for one spin chain.
+type ChainScope struct {
+        inner *irng.ChainScope
+}
+
+// NewChainScope derives shard and chain seeds per Runtime Core §13.3.
+func (s *RNGService) NewChainScope(masterSeed []byte, shardIndex int, simulationRunID string, spinChainIndex int64) ChainScope <span class="cov7" title="4">{
+        return ChainScope{inner: s.inner.NewChainScope(masterSeed, shardIndex, simulationRunID, spinChainIndex)}
+}</span>
+
+// ChainSeed returns the derived chain seed bytes (for diagnostics and tests).
+func (c ChainScope) ChainSeed() []byte <span class="cov1" title="1">{
+        return c.inner.ChainSeed()
+}</span>
+
+// FrameStream returns a persistent frame-level stream allocator.
+func (c ChainScope) FrameStream(frameID string) *FrameStream <span class="cov4" title="2">{
+        return &amp;FrameStream{inner: c.inner.FrameStream(frameID)}
+}</span>
+
+// FrameStream mints step and multiplier RNG streams for one stack frame.
+type FrameStream struct {
+        inner *irng.FrameStream
+}
+
+// StepRNG returns an RNG for one ExecuteStep (fresh derivation per step index).
+func (f *FrameStream) StepRNG(stepIndex int) RNG <span class="cov1" title="1">{
+        return f.inner.StepRNG(stepIndex)
+}</span>
+
+// MultiplierRNG returns an independent RNG for one multiplier application.
+func (f *FrameStream) MultiplierRNG(multiplierRefID string, applyIndex int) RNG <span class="cov4" title="2">{
+        return f.inner.MultiplierRNG(multiplierRefID, applyIndex)
+}</span>
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package runtime
+
+import (
+        "fmt"
+
+        "math-assistant/runtime-core/internal/domain"
+        isession "math-assistant/runtime-core/internal/runtime/session"
+)
+
+// BetContext is immutable bet information for a spin chain (Runtime Core §14.3).
+type BetContext struct {
+        LineCount          int
+        CoinValueScale     int
+        DefaultCoinValue   int
+        TotalBetMinorUnits int64
+        BetModelType       string
+}
+
+// EffectiveLimits are resolved runtime safety limits for a chain (Canonical §18).
+type EffectiveLimits struct {
+        MaxStepsPerSpinChain   int
+        MaxFramesPerChain      int
+        MaxTransitionsPerStep  int
+        MaxRespinsPerFeature   int
+        MaxEventsPerChain      int
+        MaxWallClockMsPerChain int
+}
+
+// ExposureState holds runtime exposure cap enforcement state (Runtime Core §16).
+type ExposureState struct {
+        EnforceCap         bool
+        EffectiveCapMinor  int64
+        CapScope           string
+        MaxWinMinorUnits   int64
+        MaxWinMultiplier   int64
+}
+
+// SessionContext is mutable per-chain runtime state (Runtime Core §7.1).
+type SessionContext struct {
+        GameVersionContentHash     string
+        EngineVersion              string
+        SpinChainIndex             int64
+        Bet                        BetContext
+        TotalBetMinorUnits           int64
+        TotalWinMinorUnits           int64
+        TotalUncappedWinMinorUnits   int64
+        TotalTruncatedMinorUnits     int64
+        ExposureCapApplied           bool
+        InheritancePolicy            string
+        RNG                          *RNGService
+        ChainRNG                     ChainScope
+        Events                       *EventLogger
+        Limits                       EffectiveLimits
+        Exposure                     ExposureState
+}
+
+// NewSessionParams configures SessionContext construction for phase R1.
+type NewSessionParams struct {
+        Game            *domain.GameVersion
+        EngineVersion   string
+        MasterSeed      []byte
+        SpinChainIndex  int64
+        ShardIndex      int
+        SimulationRunID string
+        BetMinorUnits   int64
+        EventLogMode    EventLogMode
+        RNGConfig       RNGServiceConfig
+}
+
+// NewSessionParamsFromRequest maps a SpinChainRequest to session construction params.
+func NewSessionParamsFromRequest(req SpinChainRequest) NewSessionParams <span class="cov1" title="1">{
+        engineVersion := req.EngineVersion
+        if engineVersion == "" </span><span class="cov1" title="1">{
+                engineVersion = EngineVersion
+        }</span>
+        <span class="cov1" title="1">rngCfg := DefaultRNGServiceConfig()
+        return NewSessionParams{
+                Game:            req.Game,
+                EngineVersion:   engineVersion,
+                MasterSeed:      req.MasterSeed,
+                SpinChainIndex:  req.SpinChainIndex,
+                ShardIndex:      req.ShardIndex,
+                SimulationRunID: req.SimulationRunID,
+                BetMinorUnits:   req.BetMinorUnits,
+                EventLogMode:    req.EventLogMode,
+                RNGConfig:       rngCfg,
+        }</span>
+}
+
+// NewSessionContext constructs a session for one spin chain.
+func NewSessionContext(params NewSessionParams) (*SessionContext, error) <span class="cov10" title="4">{
+        inner, err := isession.New(isession.Params{
+                Game:            params.Game,
+                EngineVersion:   params.EngineVersion,
+                MasterSeed:      params.MasterSeed,
+                SpinChainIndex:  params.SpinChainIndex,
+                ShardIndex:      params.ShardIndex,
+                SimulationRunID: params.SimulationRunID,
+                BetMinorUnits:   params.BetMinorUnits,
+                EventLogMode:    isession.EventLogMode(params.EventLogMode),
+                RNGConfig: isession.RNGConfig{
+                        Algorithm: isession.RNGAlgorithm(params.RNGConfig.Algorithm),
+                        Policy:    isession.RNGPolicy(params.RNGConfig.Policy),
+                },
+        })
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="3">rngSvc, err := NewRNGService(params.RNGConfig)
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, fmt.Errorf("rng service: %w", err)
+        }</span>
+        <span class="cov5" title="2">chainScope := rngSvc.NewChainScope(params.MasterSeed, params.ShardIndex, params.SimulationRunID, params.SpinChainIndex)
+        logger := NewEventLogger(params.EventLogMode, EventCorrelation{
+                SimulationRunID:        params.SimulationRunID,
+                SpinChainIndex:         params.SpinChainIndex,
+                GameVersionContentHash: inner.GameVersionContentHash,
+                EngineVersion:          params.EngineVersion,
+        })
+        return &amp;SessionContext{
+                GameVersionContentHash:   inner.GameVersionContentHash,
+                EngineVersion:            inner.EngineVersion,
+                SpinChainIndex:           inner.SpinChainIndex,
+                Bet:                      mapBetContext(inner.Bet),
+                TotalBetMinorUnits:       inner.TotalBetMinorUnits,
+                InheritancePolicy:        inner.InheritancePolicy,
+                RNG:                      rngSvc,
+                ChainRNG:                 chainScope,
+                Events:                   logger,
+                Limits:                   mapLimits(inner.Limits),
+                Exposure:                 mapExposure(inner.Exposure),
+        }, nil</span>
+}
+
+func mapBetContext(b isession.BetContext) BetContext <span class="cov5" title="2">{
+        return BetContext{
+                LineCount:          b.LineCount,
+                CoinValueScale:     b.CoinValueScale,
+                DefaultCoinValue:   b.DefaultCoinValue,
+                TotalBetMinorUnits: b.TotalBetMinorUnits,
+                BetModelType:       b.BetModelType,
+        }
+}</span>
+
+func mapLimits(l isession.EffectiveLimits) EffectiveLimits <span class="cov5" title="2">{
+        return EffectiveLimits{
+                MaxStepsPerSpinChain:   l.MaxStepsPerSpinChain,
+                MaxFramesPerChain:      l.MaxFramesPerChain,
+                MaxTransitionsPerStep:  l.MaxTransitionsPerStep,
+                MaxRespinsPerFeature:   l.MaxRespinsPerFeature,
+                MaxEventsPerChain:      l.MaxEventsPerChain,
+                MaxWallClockMsPerChain: l.MaxWallClockMsPerChain,
+        }
+}</span>
+
+func mapExposure(e isession.ExposureState) ExposureState <span class="cov5" title="2">{
+        return ExposureState{
+                EnforceCap:        e.EnforceCap,
+                EffectiveCapMinor: e.EffectiveCapMinor,
+                CapScope:          e.CapScope,
+                MaxWinMinorUnits:  e.MaxWinMinorUnits,
+                MaxWinMultiplier:  e.MaxWinMultiplier,
+        }
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

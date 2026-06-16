@@ -1,0 +1,10 @@
+# Math Assistant — Version 1.0.0
+
+| Component | Version | Tag |
+|-----------|---------|-----|
+| Runtime Core (engine) | `runtime-core@1.8.0` | `runtime-core@1.8.0` |
+| API | `1.0.0` | `api@1.0.0` |
+| Web | `1.0.0` | `web@1.0.0` |
+
+**Freeze date:** 2026-06-15  
+**Status:** Frozen — no new features; engine behavior unchanged.

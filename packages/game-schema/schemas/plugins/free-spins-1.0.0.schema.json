@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/schemas/plugins/free-spins-1.0.0.schema.json",
+  "title": "core.free-spins plugin configuration",
+  "description": "Configuration schema for core.free-spins@1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reelSetId", "awardsByScatterCount"],
+  "properties": {
+    "reelSetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "awardsByScatterCount": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[3-9]$|^10$"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 1000
+      },
+      "description": "Map of scatter count (3+) to free spins awarded on entry"
+    },
+    "retrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "awardsByScatterCount": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[3-9]$|^10$"
+          },
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      }
+    },
+    "multiplierRefId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to plugins map entry with pluginId core.multiplier"
+    },
+    "bonusTriggers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SymbolTrigger" }
+    }
+  },
+  "$defs": {
+    "SymbolTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbolId", "minCount", "emitTrigger"],
+      "properties": {
+        "symbolId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+        },
+        "minCount": { "type": "integer", "minimum": 1, "maximum": 15 },
+        "emitTrigger": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "retrigger": { "properties": { "enabled": { "const": true } } } },
+        "required": ["retrigger"]
+      },
+      "then": {
+        "properties": {
+          "retrigger": { "required": ["awardsByScatterCount"] }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "reelSetId": "free_spins",
+      "awardsByScatterCount": { "3": 10, "4": 15, "5": 20 },
+      "retrigger": {
+        "enabled": true,
+        "awardsByScatterCount": { "3": 5, "4": 10, "5": 15 }
+      },
+      "multiplierRefId": "mult_fs",
+      "bonusTriggers": [
+        { "symbolId": "BONUS", "minCount": 6, "emitTrigger": "HOLD_AND_WIN" }
+      ]
+    }
+  ],
+  "x-invalidExamples": [
+    {
+      "description": "Award for fewer than 3 scatters",
+      "value": {
+        "reelSetId": "free_spins",
+        "awardsByScatterCount": { "2": 5 }
+      }
+    },
+    {
+      "description": "Retrigger enabled without award table",
+      "value": {
+        "reelSetId": "free_spins",
+        "awardsByScatterCount": { "3": 10 },
+        "retrigger": { "enabled": true }
+      }
+    },
+    {
+      "description": "Empty awards map",
+      "value": {
+        "reelSetId": "free_spins",
+        "awardsByScatterCount": {}
+      }
+    }
+  ]
+}

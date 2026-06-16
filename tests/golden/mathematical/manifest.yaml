@@ -1,0 +1,5 @@
+version: "1.0.0"
+fixtures:
+  - id: analytic-4spin-bucketed
+    path: analytic-4spin-bucketed
+    locked: true

@@ -1,0 +1,265 @@
+{
+  "schemaVersion": "1.0.0",
+  "gameVersion": {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "projectId": "f0e1d2c3-b4a5-9678-9012-3456789abcde",
+    "versionNumber": 1,
+    "status": "draft",
+    "createdAt": "2026-06-14T10:00:00Z",
+    "label": "Base to Free Spins",
+    "source": "dsl-compiler"
+  },
+  "metadata": {
+    "title": "Base Free Spins",
+    "rtpTarget": {
+      "percent": 96,
+      "tolerance": 0.1
+    }
+  },
+  "gameConfig": {
+    "grid": {
+      "reels": 5,
+      "rows": 3,
+      "indexOrigin": "top-left"
+    },
+    "defaultReelSetId": "base_game"
+  },
+  "symbols": {
+    "H1": {
+      "id": "H1",
+      "displayName": "High 1",
+      "type": "regular"
+    },
+    "L1": {
+      "id": "L1",
+      "displayName": "Low 1",
+      "type": "regular"
+    },
+    "SCATTER": {
+      "id": "SCATTER",
+      "type": "scatter",
+      "pays": false
+    }
+  },
+  "reelSets": {
+    "base_game": {
+      "id": "base_game",
+      "reels": [
+        {
+          "reelIndex": 0,
+          "symbols": ["L1", "H1", "SCATTER", "L1", "H1"]
+        },
+        {
+          "reelIndex": 1,
+          "symbols": ["L1", "H1", "SCATTER", "L1", "H1"]
+        },
+        {
+          "reelIndex": 2,
+          "symbols": ["L1", "H1", "SCATTER", "L1", "H1"]
+        },
+        {
+          "reelIndex": 3,
+          "symbols": ["L1", "H1", "SCATTER", "L1", "H1"]
+        },
+        {
+          "reelIndex": 4,
+          "symbols": ["L1", "H1", "SCATTER", "L1", "H1"]
+        }
+      ]
+    },
+    "free_spins": {
+      "id": "free_spins",
+      "reels": [
+        {
+          "reelIndex": 0,
+          "symbols": ["L1", "H1", "SCATTER", "H1", "L1"]
+        },
+        {
+          "reelIndex": 1,
+          "symbols": ["L1", "H1", "SCATTER", "H1", "L1"]
+        },
+        {
+          "reelIndex": 2,
+          "symbols": ["L1", "H1", "SCATTER", "H1", "L1"]
+        },
+        {
+          "reelIndex": 3,
+          "symbols": ["L1", "H1", "SCATTER", "H1", "L1"]
+        },
+        {
+          "reelIndex": 4,
+          "symbols": ["L1", "H1", "SCATTER", "H1", "L1"]
+        }
+      ]
+    }
+  },
+  "paytable": {
+    "lines": [
+      {
+        "index": 1,
+        "path": [1, 1, 1, 1, 1]
+      }
+    ],
+    "pays": [
+      {
+        "symbolId": "H1",
+        "count": 5,
+        "multiplier": 100
+      }
+    ]
+  },
+  "winModel": {
+    "type": "lines",
+    "direction": "left-to-right",
+    "scatterPaysOnReels": true,
+    "highestWinOnlyPerLine": true
+  },
+  "betModel": {
+    "type": "lines",
+    "lineCount": 20,
+    "coinValueScale": 100,
+    "defaultCoinValue": 1,
+    "minCoinValue": 1,
+    "maxCoinValue": 1
+  },
+  "plugins": {
+    "base_main": {
+      "refId": "base_main",
+      "pluginId": "core.base-game",
+      "pluginVersion": "1.0.0",
+      "configSchemaVersion": "1.0.0",
+      "capabilities": ["spin.grid", "win.lines", "win.scatter"]
+    },
+    "fs_main": {
+      "refId": "fs_main",
+      "pluginId": "core.free-spins",
+      "pluginVersion": "1.0.0",
+      "configSchemaVersion": "1.0.0",
+      "capabilities": [
+        "spin.grid",
+        "win.lines",
+        "win.scatter",
+        "feature.retrigger"
+      ]
+    }
+  },
+  "stateMachines": {
+    "main": {
+      "id": "main",
+      "initialStateId": "BASE",
+      "states": {
+        "BASE": {
+          "id": "BASE",
+          "pluginRefId": "base_main",
+          "stateType": "atomic_spin",
+          "terminal": false,
+          "rtpCategory": "BASE",
+          "pluginConfig": {
+            "reelSetId": "base_game",
+            "scatterTriggers": [
+              {
+                "symbolId": "SCATTER",
+                "minCount": 3,
+                "emitTrigger": "FREE_SPINS"
+              }
+            ]
+          },
+          "transitions": [
+            {
+              "id": "t_base_to_fs",
+              "trigger": "FREE_SPINS",
+              "priority": 200,
+              "priorityTier": "FEATURE_ENTRY",
+              "effect": "goto",
+              "targetStateId": "FREE_SPINS"
+            },
+            {
+              "id": "t_spin",
+              "trigger": "SPIN_COMPLETE",
+              "priority": 1000,
+              "priorityTier": "FALLBACK",
+              "effect": "stay",
+              "targetStateId": "BASE"
+            }
+          ]
+        },
+        "FREE_SPINS": {
+          "id": "FREE_SPINS",
+          "pluginRefId": "fs_main",
+          "stateType": "atomic_spin",
+          "terminal": false,
+          "rtpCategory": "FREE_SPINS",
+          "pluginConfig": {
+            "reelSetId": "free_spins",
+            "awardsByScatterCount": {
+              "3": 10,
+              "4": 15,
+              "5": 20
+            },
+            "retrigger": {
+              "enabled": true,
+              "awardsByScatterCount": {
+                "3": 5,
+                "4": 10,
+                "5": 15
+              }
+            }
+          },
+          "transitions": [
+            {
+              "id": "t_fs_complete",
+              "trigger": "FEATURE_COMPLETE",
+              "priority": 900,
+              "priorityTier": "FEATURE_EXIT",
+              "effect": "goto",
+              "targetStateId": "BASE"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "session": {
+    "rootMachineId": "main",
+    "maxStackDepth": 4,
+    "spinLoopMode": "single_chain",
+    "contextInheritancePolicy": "mvp-v1",
+    "runtimeLimits": {
+      "maxStepsPerSpinChain": 500,
+      "maxRespinsPerFeature": 100
+    }
+  },
+  "exposure": {
+    "maxWinMinorUnits": 500000,
+    "maxWinMultiplier": 5000,
+    "capScope": "session_spin_chain",
+    "enforceCap": true,
+    "validationMode": "strict"
+  },
+  "determinism": {
+    "rngAlgorithm": "PCG64",
+    "rngAlgorithmVersion": "1.0",
+    "seedDerivationPolicy": "v1-hash-shard",
+    "moneyRepresentation": "fixed_minor_units",
+    "moneyScale": 10000
+  },
+  "precedence": {
+    "triggerOrder": ["FREE_SPINS", "FEATURE_COMPLETE", "SPIN_COMPLETE"]
+  },
+  "extensions": {},
+  "rtpCategoryRegistry": {
+    "extends": "platform:v1",
+    "categories": {
+      "BASE": {
+        "label": "Base Game",
+        "parent": null,
+        "decompositionGroup": "base"
+      },
+      "FREE_SPINS": {
+        "label": "Free Spins",
+        "parent": null,
+        "decompositionGroup": "feature"
+      }
+    }
+  }
+}

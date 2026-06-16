@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/registries/validation-errors-v1.json",
+  "version": "1.0.0",
+  "description": "Validation error code registry for Canonical Game Schema v1.0.0",
+  "severityLevels": ["error", "warning", "info"],
+  "layers": ["schema", "graph", "runtime", "simulation_profile"],
+  "errors": [
+    {
+      "code": "SV-001",
+      "layer": "schema",
+      "severity": "error",
+      "description": "Required root or nested fields are missing per JSON Schema",
+      "suggestion": "Add all required fields defined in game-version-1.0.0.schema.json"
+    },
+    {
+      "code": "SV-002",
+      "layer": "schema",
+      "severity": "error",
+      "description": "Field value type does not match JSON Schema",
+      "suggestion": "Correct the field type (string, integer, object, array, boolean)"
+    },
+    {
+      "code": "SV-003",
+      "layer": "schema",
+      "severity": "error",
+      "description": "Enum value is not in the allowed set",
+      "suggestion": "Use a valid enum value from the schema or registry"
+    },
+    {
+      "code": "SV-004",
+      "layer": "schema",
+      "severity": "error",
+      "description": "String value fails pattern constraint (symbol id, state id, machine id, contentHash)",
+      "suggestion": "Fix the identifier format per CANONICAL_GAME_SCHEMA_V1.md §3"
+    },
+    {
+      "code": "SV-005",
+      "layer": "schema",
+      "severity": "error",
+      "description": "Integer value outside min/max bounds (grid size, counts, priorities)",
+      "suggestion": "Adjust value to fall within documented limits"
+    },
+    {
+      "code": "SV-006",
+      "layer": "schema",
+      "severity": "error",
+      "description": "Unknown property at root level (additionalProperties false)",
+      "suggestion": "Move custom data into extensions namespace or remove the field"
+    },
+    {
+      "code": "SV-007",
+      "layer": "schema",
+      "severity": "error",
+      "description": "schemaVersion major version is not supported",
+      "suggestion": "Set schemaVersion to 1.0.0 or migrate document to supported schema"
+    },
+    {
+      "code": "SV-008",
+      "layer": "schema",
+      "severity": "error",
+      "description": "contentHash present but format is invalid",
+      "suggestion": "Use sha256: followed by 64 lowercase hex characters"
+    },
+    {
+      "code": "GV-001",
+      "layer": "graph",
+      "severity": "error",
+      "description": "State machine does not have exactly one initialStateId",
+      "suggestion": "Set a single initial state per machine"
+    },
+    {
+      "code": "GV-002",
+      "layer": "graph",
+      "severity": "error",
+      "description": "session.rootMachineId does not reference an existing state machine",
+      "suggestion": "Set rootMachineId to a key in stateMachines"
+    },
+    {
+      "code": "GV-003",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Transition targetStateId does not exist in the same machine",
+      "suggestion": "Fix typo or add missing state"
+    },
+    {
+      "code": "GV-004",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Transition targetMachineId does not exist for spawn effect",
+      "suggestion": "Add machine definition or fix targetMachineId"
+    },
+    {
+      "code": "GV-005",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Orphan state is not reachable from initial state",
+      "suggestion": "Remove unused state or add incoming transition"
+    },
+    {
+      "code": "GV-006",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Non-terminal state has no outgoing path or progression to terminal",
+      "suggestion": "Add transitions or progression metadata"
+    },
+    {
+      "code": "GV-007",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Terminal state has invalid goto to non-terminal without exit path",
+      "suggestion": "Fix terminal state transitions"
+    },
+    {
+      "code": "GV-008",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Spawnable machine has no pop/exit path",
+      "suggestion": "Add FEATURE_COMPLETE transition with effect pop in child machine"
+    },
+    {
+      "code": "GV-009",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Computed max stack depth inconsistent with spawn graph",
+      "suggestion": "Review spawn chain and maxStackDepth"
+    },
+    {
+      "code": "GV-010",
+      "layer": "graph",
+      "severity": "error",
+      "description": "maxStackDepth is less than computed worst-case depth",
+      "suggestion": "Increase session.maxStackDepth"
+    },
+    {
+      "code": "GV-011",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Infinite loop detected without progression counter metadata",
+      "suggestion": "Add progression block or fix transition cycle"
+    },
+    {
+      "code": "GV-012",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Worst-case spawn depth exceeds session.maxStackDepth",
+      "suggestion": "Reduce nesting or increase maxStackDepth"
+    },
+    {
+      "code": "GV-013",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Duplicate transition id within the same state",
+      "suggestion": "Use unique transition ids per state"
+    },
+    {
+      "code": "GV-014",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Duplicate state id within the same machine",
+      "suggestion": "Use unique state ids per machine"
+    },
+    {
+      "code": "GV-015",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Duplicate machine id in stateMachines map",
+      "suggestion": "Use unique machine ids"
+    },
+    {
+      "code": "GV-016",
+      "layer": "graph",
+      "severity": "warning",
+      "description": "Ambiguous transition priority for same trigger on same state",
+      "suggestion": "Adjust priority tiers or precedence.triggerOrder"
+    },
+    {
+      "code": "GV-017",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Multiple equally ranked transitions with no deterministic tie-break",
+      "suggestion": "Fix priority/precedence or transition ids"
+    },
+    {
+      "code": "GV-018",
+      "layer": "graph",
+      "severity": "error",
+      "description": "state.pluginRefId does not resolve to plugins map entry",
+      "suggestion": "Add plugin reference or fix pluginRefId"
+    },
+    {
+      "code": "GV-019",
+      "layer": "graph",
+      "severity": "error",
+      "description": "pluginConfig fails plugin JSON Schema validation",
+      "suggestion": "Fix config per packages/game-schema/schemas/plugins/*.schema.json"
+    },
+    {
+      "code": "GV-020",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Plugin capabilities do not satisfy stateType requirements",
+      "suggestion": "Use plugin with required capabilities or change stateType"
+    },
+    {
+      "code": "GV-021",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Symbol reference in paytable, reels, or triggers does not exist in symbols map",
+      "suggestion": "Add symbol definition or fix reference"
+    },
+    {
+      "code": "GV-022",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Reel set strip count does not match gameConfig.grid.reels",
+      "suggestion": "Add or remove reels to match grid size"
+    },
+    {
+      "code": "GV-023",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Exposure validation failed for configured validationMode (theoretical max exceeds cap in strict mode)",
+      "suggestion": "Raise maxWinMinorUnits/maxWinMultiplier or reduce paytable/feature awards"
+    },
+    {
+      "code": "GV-024",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Published document contentHash mismatch or unauthorized mutation",
+      "suggestion": "Create new draft game version instead of editing published snapshot"
+    },
+    {
+      "code": "GV-025",
+      "layer": "graph",
+      "severity": "error",
+      "description": "state.rtpCategory is not registered in platform or document RTP registry",
+      "suggestion": "Use BASE, FREE_SPINS, HOLD_AND_WIN, MULTIPLIERS or extend rtpCategoryRegistry"
+    },
+    {
+      "code": "GV-026",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Conflicting RTP category decomposition definitions",
+      "suggestion": "Resolve overlapping categories in same decompositionGroup"
+    },
+    {
+      "code": "GV-027",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Transition priority or priorityTier not in priority-tiers-v1 registry",
+      "suggestion": "Use registered tier and matching defaultPriority from priority-tiers-v1.json"
+    },
+    {
+      "code": "GV-028",
+      "layer": "graph",
+      "severity": "warning",
+      "description": "Transition missing priorityTier on hand-authored graph",
+      "suggestion": "Add priorityTier from priority-tiers-v1.json"
+    },
+    {
+      "code": "GV-029",
+      "layer": "graph",
+      "severity": "warning",
+      "description": "Published game missing expected RTP categories for active features",
+      "suggestion": "Assign FREE_SPINS / HOLD_AND_WIN rtpCategory on feature states"
+    },
+    {
+      "code": "GV-030",
+      "layer": "graph",
+      "severity": "error",
+      "description": "RTP category parent rollup graph contains a cycle",
+      "suggestion": "Remove cyclic parent links in rtpCategoryRegistry"
+    },
+    {
+      "code": "GV-031",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Declared exposure cap is unreachable but enforceCap is true",
+      "suggestion": "Lower paytable/feature awards or raise cap"
+    },
+    {
+      "code": "GV-032",
+      "layer": "graph",
+      "severity": "warning",
+      "description": "Exposure manual attestation used (validationMode manual)",
+      "suggestion": "Ensure attestation fields are complete and reviewed"
+    },
+    {
+      "code": "GV-033",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Spawn transition lacks resolvable pop path in target machine",
+      "suggestion": "Add pop transition on FEATURE_COMPLETE in child machine"
+    },
+    {
+      "code": "GV-034",
+      "layer": "graph",
+      "severity": "error",
+      "description": "persistentStore schema present under mvp-v1 policy (not allowed in MVP)",
+      "suggestion": "Remove persistentStore schema until Phase 3"
+    },
+    {
+      "code": "GV-035",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Multiplier plugin scope session forbidden in MVP",
+      "suggestion": "Use scope feature_frame only"
+    },
+    {
+      "code": "GV-036",
+      "layer": "graph",
+      "severity": "error",
+      "description": "runtimeLimits.maxFramesPerChain exceeds session.maxStackDepth",
+      "suggestion": "Align runtimeLimits with maxStackDepth"
+    },
+    {
+      "code": "GV-037",
+      "layer": "graph",
+      "severity": "error",
+      "description": "Hold & Win worst-case respins exceed maxRespinsPerFeature",
+      "suggestion": "Reduce initialRespins/gridCapacity or raise runtime limit"
+    },
+    {
+      "code": "RV-001",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "contentHash does not match canonical serialized document bytes",
+      "suggestion": "Recompute hash or reload correct snapshot"
+    },
+    {
+      "code": "RV-002",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "Pinned plugin version not found in runtime registry",
+      "suggestion": "Install matching built-in plugin version or update game definition"
+    },
+    {
+      "code": "RV-003",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "determinism fields not supported by engine version",
+      "suggestion": "Update engine or change determinism configuration"
+    },
+    {
+      "code": "RV-004",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "Simulation attempted on draft without dev override",
+      "suggestion": "Publish game version or enable draft simulation in dev profile"
+    },
+    {
+      "code": "RV-005",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "No valid ValidationReport with valid=true for this snapshot",
+      "suggestion": "Run validation engine and fix errors before simulation"
+    },
+    {
+      "code": "RV-006",
+      "layer": "runtime",
+      "severity": "error",
+      "description": "Golden mode contentHash does not match fixture manifest",
+      "suggestion": "Use pinned fixture game.canonical.json hash"
+    },
+    {
+      "code": "SP-001",
+      "layer": "simulation_profile",
+      "severity": "error",
+      "description": "SimulationProfile references missing or invalid gameVersionContentHash",
+      "suggestion": "Set gameVersionContentHash to published snapshot hash"
+    },
+    {
+      "code": "SP-002",
+      "layer": "simulation_profile",
+      "severity": "error",
+      "description": "spinCount must be >= 1",
+      "suggestion": "Increase spinCount"
+    },
+    {
+      "code": "SP-003",
+      "layer": "simulation_profile",
+      "severity": "error",
+      "description": "golden mode spinCount does not match fixture manifest",
+      "suggestion": "Use spin count from tests/golden/manifest.yaml"
+    },
+    {
+      "code": "SP-004",
+      "layer": "simulation_profile",
+      "severity": "error",
+      "description": "eventLog.maxEventsPerChain exceeds effective runtime limit",
+      "suggestion": "Lower maxEventsPerChain in profile or raise runtimeLimits"
+    },
+    {
+      "code": "SP-005",
+      "layer": "simulation_profile",
+      "severity": "error",
+      "description": "determinism.engineVersion mismatch with worker",
+      "suggestion": "Pin engine version or upgrade worker"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+version: "1.0.0"
+fixtures:
+  - id: fixture-01-base-5x3
+    path: fixture-01-base-5x3
+    flow: base
+    runtimeValidation:
+      locked: true
+  - id: fixture-02-base-free-spins
+    path: fixture-02-base-free-spins
+    flow: base-free-spins
+    runtimeValidation:
+      locked: true
+  - id: fixture-03-base-hold-win
+    path: fixture-03-base-hold-win
+    flow: base-hold-win
+    runtimeValidation:
+      locked: true
+  - id: fixture-04-nested-fs-hold-win
+    path: fixture-04-nested-fs-hold-win
+    flow: nested-fs-hold-win
+    runtimeValidation:
+      locked: true

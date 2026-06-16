@@ -1,0 +1,82 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: math_assistant
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["mvp", "enterprise"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    environment:
+      API_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/math_assistant
+      API_JWT_SECRET_KEY: change-me-in-production-use-32-bytes-min
+      API_DEPLOYMENT_MODE: ${API_DEPLOYMENT_MODE:-mvp}
+      API_SIMULATION_EXECUTION_BACKEND: ${API_SIMULATION_EXECUTION_BACKEND:-inprocess}
+      API_SIMULATION_WORKER_COUNT: ${API_SIMULATION_WORKER_COUNT:-1}
+      API_SIMULATION_PROCESS_POOL_WORKERS: ${API_SIMULATION_PROCESS_POOL_WORKERS:-1}
+      API_MAX_SIMULATION_SPIN_COUNT: ${API_MAX_SIMULATION_SPIN_COUNT:-10000000}
+      API_MAX_ACTIVE_SIMULATIONS: ${API_MAX_ACTIVE_SIMULATIONS:-2}
+      API_REDIS_URL: ${API_REDIS_URL:-redis://redis:6379/0}
+      MATH_ASSISTANT_SCHEMA_ROOT: /app/packages/game-schema
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+        required: false
+
+  simulation-worker:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    profiles: ["mvp", "enterprise"]
+    command: celery -A app.distributed.celery_app worker --loglevel=info -Q simulations --concurrency=1
+    environment:
+      API_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/math_assistant
+      API_JWT_SECRET_KEY: change-me-in-production-use-32-bytes-min
+      API_DEPLOYMENT_MODE: ${API_DEPLOYMENT_MODE:-mvp}
+      API_SIMULATION_EXECUTION_BACKEND: distributed
+      API_REDIS_URL: redis://redis:6379/0
+      MATH_ASSISTANT_SCHEMA_ROOT: /app/packages/game-schema
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

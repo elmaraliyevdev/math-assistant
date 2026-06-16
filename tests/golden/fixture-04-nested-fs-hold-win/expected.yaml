@@ -1,0 +1,25 @@
+version: "1.0.0"
+locked: true
+engineVersion: runtime-core@1.8.0
+runtimeOutcome:
+  eventLogHash: "c19d62afe4d76cf4401f14900174c5d8071552665970c150ead6e7941486804e"
+  totalWinMinorUnits: 1030000
+  totalBetMinorUnits: 2000
+  stepCount: 5
+  framePushCount: 1
+  exposure:
+    capApplied: false
+    truncatedMinorUnits: 0
+    uncappedWinMinorUnits: 1030000
+    truncationCount: 0
+  accumulatorDelta:
+    cappedWinMinorUnits: 1030000
+    uncappedWinMinorUnits: 1030000
+    exposureTruncationCount: 0
+    exposureTruncatedMinorUnits: 0
+    chainFaultCount: 0
+  fault: null
+  limitHit: null
+determinism:
+  requireExactEngineMatch: true
+  requireExactEventLogHash: true

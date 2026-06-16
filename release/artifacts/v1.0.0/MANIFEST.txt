@@ -1,0 +1,13 @@
+Math Assistant v1.0.0 deployment artifacts
+Generated: 20260615T143040Z
+Commit: unknown
+
+Contents:
+  docker-compose.prod.yml
+  .env.production.example
+  monitoring/
+  DEPLOYMENT_GUIDE.md
+  OPERATIONS_RUNBOOK.md
+  RELEASE_NOTES_v1.0.md
+  VERSION_1.0_CHECKLIST.md
+  math-assistant-src-20260615T143040Z.tar.gz

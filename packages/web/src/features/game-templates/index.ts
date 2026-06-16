@@ -1,0 +1,7 @@
+export { GAME_TEMPLATES, downloadTemplate, getTemplateById } from '@/features/game-templates/api/templates-api'
+export { TemplateDownloadCard } from '@/features/game-templates/components/TemplateDownloadCard'
+export { TemplatePreview } from '@/features/game-templates/components/TemplatePreview'
+export { TemplateSelector } from '@/features/game-templates/components/TemplateSelector'
+export { UseTemplateDialog } from '@/features/game-templates/components/UseTemplateDialog'
+export { useGameTemplate, useGameTemplates } from '@/features/game-templates/hooks/use-game-templates'
+export type { GameTemplate, VersionUploadTab } from '@/features/game-templates/types'

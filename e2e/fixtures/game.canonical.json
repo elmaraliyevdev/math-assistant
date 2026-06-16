@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "1.0.0",
+  "gameVersion": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "projectId": "f0e1d2c3-b4a5-9678-9012-3456789abcde",
+    "versionNumber": 1,
+    "status": "draft",
+    "createdAt": "2026-06-14T10:00:00Z",
+    "label": "Valid Base Game",
+    "source": "dsl-compiler"
+  },
+  "metadata": {
+    "title": "Base 5x3",
+    "rtpTarget": {
+      "percent": 96,
+      "tolerance": 0.1
+    }
+  },
+  "gameConfig": {
+    "grid": {
+      "reels": 5,
+      "rows": 3,
+      "indexOrigin": "top-left"
+    },
+    "defaultReelSetId": "base_game"
+  },
+  "symbols": {
+    "H1": {
+      "id": "H1",
+      "displayName": "High 1",
+      "type": "regular"
+    },
+    "L1": {
+      "id": "L1",
+      "displayName": "Low 1",
+      "type": "regular"
+    },
+    "SCATTER": {
+      "id": "SCATTER",
+      "type": "scatter",
+      "pays": false
+    }
+  },
+  "reelSets": {
+    "base_game": {
+      "id": "base_game",
+      "reels": [
+        {
+          "reelIndex": 0,
+          "symbols": [
+            "L1",
+            "H1",
+            "SCATTER",
+            "L1",
+            "H1"
+          ]
+        },
+        {
+          "reelIndex": 1,
+          "symbols": [
+            "L1",
+            "H1",
+            "SCATTER",
+            "L1",
+            "H1"
+          ]
+        },
+        {
+          "reelIndex": 2,
+          "symbols": [
+            "L1",
+            "H1",
+            "SCATTER",
+            "L1",
+            "H1"
+          ]
+        },
+        {
+          "reelIndex": 3,
+          "symbols": [
+            "L1",
+            "H1",
+            "SCATTER",
+            "L1",
+            "H1"
+          ]
+        },
+        {
+          "reelIndex": 4,
+          "symbols": [
+            "L1",
+            "H1",
+            "SCATTER",
+            "L1",
+            "H1"
+          ]
+        }
+      ]
+    }
+  },
+  "paytable": {
+    "lines": [
+      {
+        "index": 1,
+        "path": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "pays": [
+      {
+        "symbolId": "H1",
+        "count": 5,
+        "multiplier": 100
+      }
+    ]
+  },
+  "winModel": {
+    "type": "lines",
+    "direction": "left-to-right",
+    "scatterPaysOnReels": true,
+    "highestWinOnlyPerLine": true
+  },
+  "betModel": {
+    "type": "lines",
+    "lineCount": 20,
+    "coinValueScale": 100,
+    "defaultCoinValue": 1,
+    "minCoinValue": 1,
+    "maxCoinValue": 1
+  },
+  "plugins": {
+    "base_main": {
+      "refId": "base_main",
+      "pluginId": "core.base-game",
+      "pluginVersion": "1.0.0",
+      "configSchemaVersion": "1.0.0",
+      "capabilities": [
+        "spin.grid",
+        "win.lines",
+        "win.scatter"
+      ]
+    }
+  },
+  "stateMachines": {
+    "main": {
+      "id": "main",
+      "initialStateId": "BASE",
+      "states": {
+        "BASE": {
+          "id": "BASE",
+          "pluginRefId": "base_main",
+          "stateType": "atomic_spin",
+          "terminal": false,
+          "rtpCategory": "BASE",
+          "pluginConfig": {
+            "reelSetId": "base_game",
+            "scatterTriggers": [
+              {
+                "emitTrigger": "FREE_SPINS",
+                "minCount": 3,
+                "symbolId": "SCATTER"
+              }
+            ]
+          },
+          "transitions": [
+            {
+              "id": "t_spin",
+              "trigger": "SPIN_COMPLETE",
+              "priority": 1000,
+              "priorityTier": "FALLBACK",
+              "effect": "stay",
+              "targetStateId": "BASE"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "session": {
+    "rootMachineId": "main",
+    "maxStackDepth": 4,
+    "spinLoopMode": "single_chain",
+    "contextInheritancePolicy": "mvp-v1",
+    "runtimeLimits": {
+      "maxStepsPerSpinChain": 500
+    }
+  },
+  "exposure": {
+    "maxWinMinorUnits": 500000,
+    "maxWinMultiplier": 5000,
+    "capScope": "session_spin_chain",
+    "enforceCap": true,
+    "validationMode": "strict"
+  },
+  "determinism": {
+    "rngAlgorithm": "PCG64",
+    "rngAlgorithmVersion": "1.0",
+    "seedDerivationPolicy": "v1-hash-shard",
+    "moneyRepresentation": "fixed_minor_units",
+    "moneyScale": 10000
+  },
+  "precedence": {
+    "triggerOrder": [
+      "SPIN_COMPLETE"
+    ]
+  },
+  "extensions": {}
+}

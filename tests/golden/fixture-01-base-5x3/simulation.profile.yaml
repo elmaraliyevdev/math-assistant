@@ -1,0 +1,10 @@
+profileVersion: "1.0.0"
+mode: golden-runtime
+engineVersion: runtime-core@1.8.0
+masterSeed: "666978747572652d30312d0000"
+spinChainIndex: 0
+shardIndex: 0
+simulationRunId: golden-runtime-v1
+betMinorUnits: 0
+eventLogMode: replay
+gameVersionContentHash: "3d4f300b51844a5b1b5dbead2fff1978024905367a4cb8500aa5063a273993b4"

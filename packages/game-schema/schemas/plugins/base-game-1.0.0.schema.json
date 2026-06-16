@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/schemas/plugins/base-game-1.0.0.schema.json",
+  "title": "core.base-game plugin configuration",
+  "description": "Configuration schema for core.base-game@1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reelSetId"],
+  "properties": {
+    "reelSetId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to reelSets key used for grid spins"
+    },
+    "scatterTriggers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SymbolTrigger" },
+      "default": []
+    },
+    "bonusTriggers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/SymbolTrigger" },
+      "default": []
+    },
+    "wildBehavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "substituteAllPaying": { "type": "boolean", "default": false },
+        "expandReels": { "type": "boolean", "default": false }
+      }
+    }
+  },
+  "$defs": {
+    "SymbolTrigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbolId", "minCount", "emitTrigger"],
+      "properties": {
+        "symbolId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+        },
+        "minCount": { "type": "integer", "minimum": 1, "maximum": 15 },
+        "emitTrigger": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Trigger token emitted to state machine, e.g. FREE_SPINS, HOLD_AND_WIN"
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "reelSetId": "base_game",
+      "scatterTriggers": [
+        { "symbolId": "SCATTER", "minCount": 3, "emitTrigger": "FREE_SPINS" }
+      ],
+      "bonusTriggers": [
+        { "symbolId": "BONUS", "minCount": 6, "emitTrigger": "HOLD_AND_WIN" }
+      ]
+    }
+  ],
+  "x-invalidExamples": [
+    {
+      "description": "Missing required reelSetId",
+      "value": {
+        "scatterTriggers": []
+      }
+    },
+    {
+      "description": "minCount below minimum",
+      "value": {
+        "reelSetId": "base_game",
+        "scatterTriggers": [
+          { "symbolId": "SCATTER", "minCount": 0, "emitTrigger": "FREE_SPINS" }
+        ]
+      }
+    },
+    {
+      "description": "Unknown additional property",
+      "value": {
+        "reelSetId": "base_game",
+        "unknownField": true
+      }
+    }
+  ]
+}

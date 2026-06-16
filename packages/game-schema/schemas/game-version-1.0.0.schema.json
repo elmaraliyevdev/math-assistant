@@ -1,0 +1,720 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/schemas/game-version-1.0.0.schema.json",
+  "title": "GameVersion",
+  "description": "Canonical Game Schema v1.0.0 — frozen contract. See docs/CANONICAL_GAME_SCHEMA_V1.md",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "gameVersion",
+    "metadata",
+    "gameConfig",
+    "symbols",
+    "reelSets",
+    "paytable",
+    "winModel",
+    "betModel",
+    "plugins",
+    "stateMachines",
+    "session",
+    "exposure",
+    "determinism",
+    "precedence",
+    "extensions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Document schema format version (SV-007)"
+    },
+    "gameVersion": { "$ref": "#/$defs/GameVersionMeta" },
+    "metadata": { "$ref": "#/$defs/Metadata" },
+    "gameConfig": { "$ref": "#/$defs/GameConfig" },
+    "symbols": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/SymbolIdPattern" },
+      "additionalProperties": { "$ref": "#/$defs/Symbol" }
+    },
+    "reelSets": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/ReelSet" }
+    },
+    "paytable": { "$ref": "#/$defs/Paytable" },
+    "winModel": { "$ref": "#/$defs/WinModel" },
+    "betModel": { "$ref": "#/$defs/BetModel" },
+    "plugins": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/PluginRef" }
+    },
+    "stateMachines": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/MachineIdPattern" },
+      "additionalProperties": { "$ref": "#/$defs/StateMachine" }
+    },
+    "session": { "$ref": "#/$defs/SessionConfig" },
+    "exposure": { "$ref": "#/$defs/Exposure" },
+    "determinism": { "$ref": "#/$defs/Determinism" },
+    "precedence": { "$ref": "#/$defs/Precedence" },
+    "extensions": {
+      "type": "object",
+      "description": "Namespaced extension bag; unknown keys preserved by tooling"
+    },
+    "rtpCategoryRegistry": { "$ref": "#/$defs/RtpCategoryRegistry" },
+    "validationMetadata": { "$ref": "#/$defs/ValidationMetadata" },
+    "contentHash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "Excluded from hash input when computing digest (SV-008)"
+    }
+  },
+  "$defs": {
+    "Uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "IsoDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "SymbolIdPattern": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+    },
+    "StateIdPattern": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+    },
+    "MachineIdPattern": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "RtpCategoryId": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+    },
+    "MoneyMultiplier": {
+      "oneOf": [
+        { "type": "integer", "minimum": 0 },
+        {
+          "type": "object",
+          "required": ["num", "den"],
+          "additionalProperties": false,
+          "properties": {
+            "num": { "type": "integer", "minimum": 0 },
+            "den": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "PriorityTier": {
+      "type": "string",
+      "description": "Registered tier ids from priority-tiers-v1.json",
+      "enum": [
+        "FEATURE_ENTRY_SPAWN",
+        "FEATURE_ENTRY",
+        "FEATURE_ENTRY_GOTO",
+        "INTERNAL_TRANSITION",
+        "FEATURE_RETRIGGER",
+        "FEATURE_PROGRESS",
+        "FEATURE_EXIT",
+        "FALLBACK",
+        "SPIN_IDLE",
+        "CUSTOM"
+      ]
+    },
+    "MvpPluginId": {
+      "type": "string",
+      "enum": [
+        "core.base-game",
+        "core.free-spins",
+        "core.hold-and-win",
+        "core.multiplier"
+      ]
+    },
+    "CapabilityToken": {
+      "type": "string",
+      "enum": [
+        "spin.grid",
+        "spin.nudge",
+        "win.lines",
+        "win.ways",
+        "win.scatter",
+        "feature.nested",
+        "feature.retrigger",
+        "feature.persistent",
+        "multiplier.apply",
+        "jackpot.local",
+        "state.multistep"
+      ]
+    },
+    "GameVersionMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "projectId", "versionNumber", "status", "createdAt"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Uuid" },
+        "projectId": { "$ref": "#/$defs/Uuid" },
+        "versionNumber": { "type": "integer", "minimum": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "published", "archived"]
+        },
+        "createdAt": { "$ref": "#/$defs/IsoDateTime" },
+        "publishedAt": { "$ref": "#/$defs/IsoDateTime" },
+        "createdBy": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "source": {
+          "type": "string",
+          "enum": ["canonical", "dsl-compiler", "import"]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "status": { "const": "published" } },
+            "required": ["status"]
+          },
+          "then": { "required": ["publishedAt"] }
+        }
+      ]
+    },
+    "RtpTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["percent"],
+      "properties": {
+        "percent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "tolerance": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "Metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "rtpTarget": { "$ref": "#/$defs/RtpTarget" },
+        "volatilityTarget": { "type": "string" }
+      }
+    },
+    "GridSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reels", "rows"],
+      "properties": {
+        "reels": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "indexOrigin": {
+          "type": "string",
+          "enum": ["top-left", "bottom-left"],
+          "default": "top-left"
+        }
+      }
+    },
+    "GameConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["grid", "defaultReelSetId"],
+      "properties": {
+        "grid": { "$ref": "#/$defs/GridSpec" },
+        "defaultReelSetId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "SymbolType": {
+      "type": "string",
+      "enum": ["regular", "wild", "scatter", "bonus"]
+    },
+    "Symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/SymbolIdPattern" },
+        "displayName": { "type": "string" },
+        "type": { "$ref": "#/$defs/SymbolType" },
+        "pays": { "type": "boolean" },
+        "substitutes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SymbolIdPattern" },
+          "uniqueItems": true
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "ReelStrip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reelIndex", "symbols"],
+      "properties": {
+        "reelIndex": { "type": "integer", "minimum": 0 },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/SymbolIdPattern" }
+        },
+        "weights": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "ReelSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "reels"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "reels": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/ReelStrip" }
+        }
+      }
+    },
+    "PaylineDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "path"],
+      "properties": {
+        "index": { "type": "integer", "minimum": 1 },
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 0, "maximum": 9 }
+        }
+      }
+    },
+    "PaytableEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbolId", "count", "multiplier"],
+      "properties": {
+        "symbolId": { "$ref": "#/$defs/SymbolIdPattern" },
+        "count": { "type": "integer", "minimum": 1 },
+        "multiplier": { "$ref": "#/$defs/MoneyMultiplier" }
+      }
+    },
+    "Paytable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pays"],
+      "properties": {
+        "lines": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/PaylineDefinition" }
+        },
+        "pays": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/PaytableEntry" }
+        }
+      }
+    },
+    "WinModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["lines", "ways", "cluster"]
+        },
+        "direction": {
+          "type": "string",
+          "enum": ["left-to-right", "right-to-left", "both"],
+          "default": "left-to-right"
+        },
+        "scatterPaysOnReels": { "type": "boolean", "default": true },
+        "highestWinOnlyPerLine": { "type": "boolean", "default": true }
+      }
+    },
+    "BetModel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "coinValueScale", "defaultCoinValue", "minCoinValue", "maxCoinValue"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["lines", "ways", "totalBet"]
+        },
+        "lineCount": { "type": "integer", "minimum": 1 },
+        "coinValueScale": { "type": "integer", "minimum": 1 },
+        "defaultCoinValue": { "type": "integer", "minimum": 1 },
+        "minCoinValue": { "type": "integer", "minimum": 1 },
+        "maxCoinValue": { "type": "integer", "minimum": 1 },
+        "totalBetMinorUnits": { "type": "integer", "minimum": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "lines" } }, "required": ["type"] },
+          "then": { "required": ["lineCount"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "ways" } }, "required": ["type"] },
+          "then": { "required": ["lineCount"] }
+        }
+      ]
+    },
+    "PluginRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["refId", "pluginId", "pluginVersion", "configSchemaVersion", "capabilities"],
+      "properties": {
+        "refId": { "type": "string", "minLength": 1 },
+        "pluginId": { "$ref": "#/$defs/MvpPluginId" },
+        "pluginVersion": { "$ref": "#/$defs/Semver" },
+        "configSchemaVersion": { "$ref": "#/$defs/Semver" },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/CapabilityToken" }
+        }
+      }
+    },
+    "GuardExpression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["op"],
+      "properties": {
+        "op": {
+          "type": "string",
+          "enum": ["eq", "neq", "gt", "gte", "lt", "lte", "and", "or", "not"]
+        },
+        "path": { "type": "string" },
+        "value": {},
+        "args": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/GuardExpression" }
+        }
+      }
+    },
+    "TransitionAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["set_context", "increment_context", "emit_token"]
+        },
+        "path": { "type": "string" },
+        "value": {},
+        "token": { "type": "string" }
+      }
+    },
+    "Transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "trigger", "priority", "effect"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "trigger": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 9999 },
+        "priorityTier": { "$ref": "#/$defs/PriorityTier" },
+        "guard": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/GuardExpression" }
+          ]
+        },
+        "effect": {
+          "type": "string",
+          "enum": ["goto", "spawn", "pop", "stay"]
+        },
+        "targetStateId": { "$ref": "#/$defs/StateIdPattern" },
+        "targetMachineId": { "$ref": "#/$defs/MachineIdPattern" },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TransitionAction" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "effect": { "enum": ["goto", "stay"] } }, "required": ["effect"] },
+          "then": { "required": ["targetStateId"] }
+        },
+        {
+          "if": { "properties": { "effect": { "const": "spawn" } }, "required": ["effect"] },
+          "then": { "required": ["targetMachineId"] }
+        },
+        {
+          "if": { "properties": { "effect": { "const": "pop" } }, "required": ["effect"] },
+          "then": {
+            "not": { "required": ["targetStateId", "targetMachineId"] }
+          }
+        }
+      ]
+    },
+    "ProgressionHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "counterField": { "type": "string", "minLength": 1 },
+        "decrementsOn": {
+          "type": "string",
+          "enum": ["each_step", "each_spin", "never"]
+        },
+        "minValue": { "type": "integer" },
+        "terminatesWhen": { "type": "string" }
+      }
+    },
+    "StateType": {
+      "type": "string",
+      "enum": ["atomic_spin", "multi_step", "choice", "composite_entry"]
+    },
+    "State": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "pluginRefId",
+        "stateType",
+        "terminal",
+        "rtpCategory",
+        "pluginConfig",
+        "transitions"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/StateIdPattern" },
+        "label": { "type": "string" },
+        "pluginRefId": { "type": "string", "minLength": 1 },
+        "stateType": { "$ref": "#/$defs/StateType" },
+        "terminal": { "type": "boolean" },
+        "rtpCategory": { "$ref": "#/$defs/RtpCategoryId" },
+        "pluginConfig": { "type": "object" },
+        "transitions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Transition" }
+        },
+        "progression": { "$ref": "#/$defs/ProgressionHint" },
+        "deprecated": { "type": "boolean", "default": false }
+      }
+    },
+    "StateMachine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "initialStateId", "states"],
+      "properties": {
+        "id": { "$ref": "#/$defs/MachineIdPattern" },
+        "label": { "type": "string" },
+        "initialStateId": { "$ref": "#/$defs/StateIdPattern" },
+        "states": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/$defs/StateIdPattern" },
+          "additionalProperties": { "$ref": "#/$defs/State" }
+        }
+      }
+    },
+    "RuntimeLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxStepsPerSpinChain": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "maxFramesPerChain": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "maxTransitionsPerStep": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "maxRespinsPerFeature": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "maxEventsPerChain": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "maxWallClockMsPerChain": { "type": "integer", "minimum": 0, "maximum": 3600000 }
+      }
+    },
+    "SessionConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rootMachineId", "maxStackDepth", "spinLoopMode"],
+      "properties": {
+        "rootMachineId": { "$ref": "#/$defs/MachineIdPattern" },
+        "rootStateId": { "$ref": "#/$defs/StateIdPattern" },
+        "maxStackDepth": { "type": "integer", "minimum": 1, "maximum": 64, "default": 4 },
+        "spinLoopMode": {
+          "type": "string",
+          "enum": ["single_chain", "multi_base_session"]
+        },
+        "persistentStore": {
+          "type": "object",
+          "maxProperties": 0
+        },
+        "contextInheritancePolicy": {
+          "type": "string",
+          "default": "mvp-v1"
+        },
+        "runtimeLimits": { "$ref": "#/$defs/RuntimeLimits" }
+      }
+    },
+    "ExposureSimulationAssisted": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minSpinCount", "confidenceLevel", "maxObservedMustReachPercentOfCap"],
+      "properties": {
+        "minSpinCount": { "type": "integer", "minimum": 1000000 },
+        "confidenceLevel": { "type": "number", "minimum": 0, "exclusiveMaximum": 1 },
+        "maxObservedMustReachPercentOfCap": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "ExposureManualAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attestedBy", "attestedAt", "effectiveCapMinorUnits", "rationale"],
+      "properties": {
+        "attestedBy": { "type": "string", "minLength": 1 },
+        "attestedAt": { "$ref": "#/$defs/IsoDateTime" },
+        "effectiveCapMinorUnits": { "type": "integer", "minimum": 1 },
+        "rationale": { "type": "string", "minLength": 1 },
+        "reviewTicket": { "type": "string" }
+      }
+    },
+    "Exposure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxWinMinorUnits", "capScope", "enforceCap", "validationMode"],
+      "properties": {
+        "maxWinMinorUnits": { "type": "integer", "minimum": 1 },
+        "maxWinMultiplier": { "type": "integer", "minimum": 1 },
+        "capScope": {
+          "type": "string",
+          "enum": ["session_spin_chain", "single_spin", "feature"]
+        },
+        "enforceCap": { "type": "boolean" },
+        "validationMode": {
+          "type": "string",
+          "enum": ["strict", "simulation_assisted", "manual"],
+          "default": "strict"
+        },
+        "simulationAssisted": { "$ref": "#/$defs/ExposureSimulationAssisted" },
+        "manualAttestation": { "$ref": "#/$defs/ExposureManualAttestation" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "validationMode": { "const": "simulation_assisted" } }, "required": ["validationMode"] },
+          "then": { "required": ["simulationAssisted"] }
+        },
+        {
+          "if": { "properties": { "validationMode": { "const": "manual" } }, "required": ["validationMode"] },
+          "then": { "required": ["manualAttestation"] }
+        }
+      ]
+    },
+    "Determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rngAlgorithm",
+        "rngAlgorithmVersion",
+        "seedDerivationPolicy",
+        "moneyRepresentation",
+        "moneyScale"
+      ],
+      "properties": {
+        "rngAlgorithm": { "type": "string", "minLength": 1 },
+        "rngAlgorithmVersion": { "type": "string", "minLength": 1 },
+        "seedDerivationPolicy": { "type": "string", "minLength": 1 },
+        "moneyRepresentation": {
+          "type": "string",
+          "const": "fixed_minor_units"
+        },
+        "moneyScale": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "Precedence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["triggerOrder"],
+      "properties": {
+        "triggerOrder": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "RtpCategoryDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "decompositionGroup"],
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "parent": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/RtpCategoryId" }
+          ]
+        },
+        "decompositionGroup": {
+          "type": "string",
+          "enum": ["base", "feature", "jackpot", "adjustment", "multiplier"]
+        },
+        "description": { "type": "string" }
+      }
+    },
+    "RtpCategoryRegistry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extends", "categories"],
+      "properties": {
+        "extends": {
+          "type": "string",
+          "pattern": "^platform:v[0-9]+$"
+        },
+        "categories": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/$defs/RtpCategoryId" },
+          "additionalProperties": { "$ref": "#/$defs/RtpCategoryDefinition" }
+        }
+      }
+    },
+    "ValidationIssue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "severity", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+        "path": { "type": "string" },
+        "message": { "type": "string", "minLength": 1 },
+        "suggestion": { "type": "string" }
+      }
+    },
+    "ValidationMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["validatedAt", "validatorVersion", "checksPassed"],
+      "properties": {
+        "validatedAt": { "$ref": "#/$defs/IsoDateTime" },
+        "validatorVersion": { "type": "string", "minLength": 1 },
+        "reportId": { "$ref": "#/$defs/Uuid" },
+        "checksPassed": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ValidationIssue" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/schemas/plugins/hold-and-win-1.0.0.schema.json",
+  "title": "core.hold-and-win plugin configuration",
+  "description": "Configuration schema for core.hold-and-win@1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reelSetId",
+    "triggerSymbolId",
+    "triggerSymbolCount",
+    "initialRespins",
+    "gridCapacity"
+  ],
+  "properties": {
+    "reelSetId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "triggerSymbolId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+    },
+    "triggerSymbolCount": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 15
+    },
+    "initialRespins": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "gridCapacity": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 30,
+      "description": "Maximum hold positions (typically reels × rows)"
+    },
+    "symbolValues": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]{0,31}$"
+      },
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "description": "Optional fixed credit values per symbol id on hold grid"
+    },
+    "jackpotTiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mini": { "type": "integer", "minimum": 0 },
+        "minor": { "type": "integer", "minimum": 0 },
+        "major": { "type": "integer", "minimum": 0 },
+        "grand": { "type": "integer", "minimum": 0 }
+      },
+      "minProperties": 1
+    },
+    "multiplierRefId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fillEndsFeature": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "examples": [
+    {
+      "reelSetId": "hold_and_win",
+      "triggerSymbolId": "BONUS",
+      "triggerSymbolCount": 6,
+      "initialRespins": 3,
+      "gridCapacity": 15,
+      "jackpotTiers": {
+        "mini": 20,
+        "major": 100,
+        "grand": 500
+      },
+      "multiplierRefId": "mult_haw",
+      "fillEndsFeature": true
+    }
+  ],
+  "x-invalidExamples": [
+    {
+      "description": "initialRespins zero",
+      "value": {
+        "reelSetId": "hold_and_win",
+        "triggerSymbolId": "BONUS",
+        "triggerSymbolCount": 6,
+        "initialRespins": 0,
+        "gridCapacity": 15
+      }
+    },
+    {
+      "description": "gridCapacity exceeds platform limit",
+      "value": {
+        "reelSetId": "hold_and_win",
+        "triggerSymbolId": "BONUS",
+        "triggerSymbolCount": 6,
+        "initialRespins": 3,
+        "gridCapacity": 100
+      }
+    },
+    {
+      "description": "Missing triggerSymbolCount",
+      "value": {
+        "reelSetId": "hold_and_win",
+        "triggerSymbolId": "BONUS",
+        "initialRespins": 3,
+        "gridCapacity": 15
+      }
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    profiles: ["mvp", "enterprise"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-math_assistant}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles: ["mvp", "enterprise"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    restart: unless-stopped
+    profiles: ["mvp", "enterprise"]
+    environment:
+      API_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-math_assistant}
+      API_JWT_SECRET_KEY: ${API_JWT_SECRET_KEY:?set API_JWT_SECRET_KEY}
+      API_DEPLOYMENT_MODE: ${API_DEPLOYMENT_MODE:-mvp}
+      API_SIMULATION_EXECUTION_BACKEND: ${API_SIMULATION_EXECUTION_BACKEND:-distributed}
+      API_SIMULATION_WORKER_COUNT: ${API_SIMULATION_WORKER_COUNT:-1}
+      API_SIMULATION_PROCESS_POOL_WORKERS: ${API_SIMULATION_PROCESS_POOL_WORKERS:-1}
+      API_MAX_SIMULATION_SPIN_COUNT: ${API_MAX_SIMULATION_SPIN_COUNT:-10000000}
+      API_MAX_ACTIVE_SIMULATIONS: ${API_MAX_ACTIVE_SIMULATIONS:-2}
+      API_MAX_RECOMMENDED_SPIN_COUNT: ${API_MAX_RECOMMENDED_SPIN_COUNT:-10000000}
+      API_REDIS_URL: ${API_REDIS_URL:-redis://redis:6379/0}
+      API_ENABLE_HSTS: ${API_ENABLE_HSTS:-false}
+      API_METRICS_BEARER_TOKEN: ${API_METRICS_BEARER_TOKEN:-}
+      API_SENTRY_DSN: ${API_SENTRY_DSN:-}
+      API_SENTRY_ENVIRONMENT: ${API_SENTRY_ENVIRONMENT:-production}
+      MATH_ASSISTANT_SCHEMA_ROOT: /app/packages/game-schema
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  simulation-worker:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    restart: unless-stopped
+    profiles: ["mvp", "enterprise"]
+    command: celery -A app.distributed.celery_app worker --loglevel=info -Q simulations --concurrency=1
+    environment:
+      API_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-math_assistant}
+      API_JWT_SECRET_KEY: ${API_JWT_SECRET_KEY:?set API_JWT_SECRET_KEY}
+      API_DEPLOYMENT_MODE: ${API_DEPLOYMENT_MODE:-mvp}
+      API_SIMULATION_EXECUTION_BACKEND: distributed
+      API_REDIS_URL: ${API_REDIS_URL:-redis://redis:6379/0}
+      MATH_ASSISTANT_SCHEMA_ROOT: /app/packages/game-schema
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: packages/web/Dockerfile
+    restart: unless-stopped
+    profiles: ["mvp", "enterprise"]
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    restart: unless-stopped
+    profiles: ["enterprise"]
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    restart: unless-stopped
+    profiles: ["enterprise"]
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

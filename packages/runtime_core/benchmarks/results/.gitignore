@@ -1,0 +1,3 @@
+# Benchmark JSON artifacts (regenerate via python -m benchmarks)
+*.json
+!README.md

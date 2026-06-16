@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/registries/rtp-categories-v1.json",
+  "version": "1.0.0",
+  "registryId": "platform:v1",
+  "description": "Platform RTP category registry for Canonical Game Schema v1.0.0 MVP",
+  "extensionRules": {
+    "documentOverride": "GameVersion may include rtpCategoryRegistry.extends = platform:v1 and add categories; must not redefine platform ids with conflicting decompositionGroup",
+    "customCategories": "New category ids must match ^[A-Z][A-Z0-9_]{0,63}$ and declare decompositionGroup",
+    "stateBinding": "Every state.rtpCategory must resolve to platform registry OR document registry (GV-025)",
+    "winTagging": "Runtime tags each win with exactly one primary rtpCategory for decomposition",
+    "parentRollup": "Optional parent links must be acyclic (GV-030)",
+    "deprecation": "Removing a platform category requires schema major bump"
+  },
+  "categories": [
+    {
+      "id": "BASE",
+      "label": "Base Game",
+      "description": "All wins occurring in base game state (lines, scatters, combined)",
+      "parent": null,
+      "decompositionGroup": "base",
+      "mvpRequired": true
+    },
+    {
+      "id": "FREE_SPINS",
+      "label": "Free Spins Feature",
+      "description": "Wins and feature-driven outcomes while Free Spins frame is active",
+      "parent": null,
+      "decompositionGroup": "feature",
+      "mvpRequired": true
+    },
+    {
+      "id": "HOLD_AND_WIN",
+      "label": "Hold and Win Feature",
+      "description": "Wins from Hold & Win respins including jackpot tier awards",
+      "parent": null,
+      "decompositionGroup": "feature",
+      "mvpRequired": true
+    },
+    {
+      "id": "MULTIPLIERS",
+      "label": "Multiplier Adjustments",
+      "description": "Incremental win adjustments attributable to multiplier plugin when reported separately from base/feature wins",
+      "parent": null,
+      "decompositionGroup": "multiplier",
+      "mvpRequired": false
+    }
+  ],
+  "aliases": [
+    {
+      "id": "BASE_LINES",
+      "mapsTo": "BASE",
+      "note": "Optional fine-grained split; document registry only"
+    },
+    {
+      "id": "BASE_SCATTER",
+      "mapsTo": "BASE",
+      "note": "Optional fine-grained split; document registry only"
+    }
+  ],
+  "validationRules": [
+    {
+      "code": "GV-025",
+      "rule": "state.rtpCategory must be id or alias target in merged registry"
+    },
+    {
+      "code": "GV-026",
+      "rule": "No two categories in same decompositionGroup with overlapping exclusive win rules"
+    },
+    {
+      "code": "GV-029",
+      "rule": "Published games with FS/H&W states should use FREE_SPINS / HOLD_AND_WIN categories"
+    },
+    {
+      "code": "GV-030",
+      "rule": "parent chain must not cycle"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""Math Assistant FastAPI application."""

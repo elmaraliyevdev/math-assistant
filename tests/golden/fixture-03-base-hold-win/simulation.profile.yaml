@@ -1,0 +1,13 @@
+profileVersion: "1.0.0"
+mode: golden-runtime
+engineVersion: runtime-core@1.8.0
+masterSeed: "666978747572652d30332d0001"
+spinChainIndex: 0
+shardIndex: 0
+simulationRunId: golden-runtime-v1
+betMinorUnits: 0
+eventLogMode: replay
+gameVersionContentHash: "cf294efd711bdec55a7c0c7e2b6e765342f7f30f26d467d700ec4e64be84ceed"
+runtimeOverrides:
+  holdAndWinEntryMinCount: 3
+  holdAndWinTriggerSymbolCount: 3

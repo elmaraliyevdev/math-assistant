@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/registries/priority-tiers-v1.json",
+  "version": "1.0.0",
+  "description": "Transition priority tier registry for Canonical Game Schema v1.0.0. Lower numeric priority = higher precedence.",
+  "orderingRule": "When multiple transitions match, sort by precedence.triggerOrder, then priority (ascending), then transition.id",
+  "validationRules": [
+    {
+      "code": "RC-001",
+      "rule": "If priorityTier is set, priority must equal defaultPriority OR fall within numericRange inclusive"
+    },
+    {
+      "code": "RC-002",
+      "rule": "DSL compiler must emit both priorityTier and priority"
+    },
+    {
+      "code": "RC-003",
+      "rule": "Missing priorityTier on hand-authored transition → GV-028 warning"
+    },
+    {
+      "code": "RC-004",
+      "rule": "Unknown priorityTier or priority outside all ranges → GV-027 error"
+    },
+    {
+      "code": "RC-005",
+      "rule": "priorityTier CUSTOM requires priority in 9000-9999 and validation review flag"
+    },
+    {
+      "code": "GV-016",
+      "rule": "Same state + trigger + priority + tier → warning"
+    },
+    {
+      "code": "GV-017",
+      "rule": "Ambiguous transition set without resolvable precedence → error"
+    }
+  ],
+  "tiers": [
+    {
+      "id": "FEATURE_ENTRY_SPAWN",
+      "defaultPriority": 100,
+      "numericRange": { "min": 0, "max": 149 },
+      "description": "Enter a nested state machine via spawn effect (e.g. Hold & Win from base or free spins)",
+      "typicalEffects": ["spawn"],
+      "typicalTriggers": ["HOLD_AND_WIN"]
+    },
+    {
+      "id": "FEATURE_ENTRY",
+      "defaultPriority": 200,
+      "numericRange": { "min": 150, "max": 299 },
+      "description": "Enter a feature within the current machine via goto (e.g. Free Spins from base)",
+      "typicalEffects": ["goto"],
+      "typicalTriggers": ["FREE_SPINS"],
+      "aliases": ["FEATURE_ENTRY_GOTO"]
+    },
+    {
+      "id": "INTERNAL_TRANSITION",
+      "defaultPriority": 400,
+      "numericRange": { "min": 300, "max": 799 },
+      "description": "In-feature progression: retriggers, multi-step loops, internal step handlers",
+      "typicalEffects": ["stay", "goto"],
+      "typicalTriggers": ["RETRIGGER", "STEP_CONTINUE"],
+      "aliases": ["FEATURE_RETRIGGER", "FEATURE_PROGRESS"]
+    },
+    {
+      "id": "FEATURE_EXIT",
+      "defaultPriority": 900,
+      "numericRange": { "min": 800, "max": 949 },
+      "description": "Exit feature to parent or base, or pop nested machine on completion",
+      "typicalEffects": ["goto", "pop"],
+      "typicalTriggers": ["FEATURE_COMPLETE"]
+    },
+    {
+      "id": "FALLBACK",
+      "defaultPriority": 1000,
+      "numericRange": { "min": 950, "max": 8999 },
+      "description": "Default idle / spin-complete / lowest-precedence transitions",
+      "typicalEffects": ["stay", "goto"],
+      "typicalTriggers": ["SPIN_COMPLETE"],
+      "aliases": ["SPIN_IDLE"]
+    },
+    {
+      "id": "CUSTOM",
+      "defaultPriority": 9500,
+      "numericRange": { "min": 9000, "max": 9999 },
+      "description": "Discouraged escape hatch for exceptional graphs; requires manual validation review",
+      "requiresReview": true
+    }
+  ],
+  "recommendedMappings": {
+    "base_to_hold_and_win_spawn": { "priorityTier": "FEATURE_ENTRY_SPAWN", "priority": 100 },
+    "base_to_free_spins_goto": { "priorityTier": "FEATURE_ENTRY", "priority": 200 },
+    "free_spins_to_hold_and_win_spawn": { "priorityTier": "FEATURE_ENTRY_SPAWN", "priority": 100 },
+    "feature_complete_exit": { "priorityTier": "FEATURE_EXIT", "priority": 900 },
+    "hold_and_win_pop": { "priorityTier": "FEATURE_EXIT", "priority": 900 },
+    "base_spin_idle": { "priorityTier": "FALLBACK", "priority": 1000 }
+  }
+}

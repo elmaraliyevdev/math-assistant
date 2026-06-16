@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://math-assistant.io/schemas/plugins/multiplier-1.0.0.schema.json",
+  "title": "core.multiplier plugin configuration",
+  "description": "Configuration schema for core.multiplier@1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mode", "value", "scope", "applyTo"],
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["fixed", "ladder", "random_weighted"]
+    },
+    "value": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10000,
+      "description": "Used when mode is fixed"
+    },
+    "ladder": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "integer", "minimum": 1 },
+      "description": "Required when mode is ladder"
+    },
+    "weights": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 0 },
+      "description": "Required when mode is random_weighted"
+    },
+    "scope": {
+      "type": "string",
+      "enum": ["feature_frame", "session"],
+      "description": "MVP: feature_frame only (session forbidden — GV-035)"
+    },
+    "applyTo": {
+      "type": "string",
+      "enum": ["all_wins_in_frame", "line_wins_only", "feature_wins_only"]
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "fixed" } }, "required": ["mode"] },
+      "then": { "required": ["value"] }
+    },
+    {
+      "if": { "properties": { "mode": { "const": "ladder" } }, "required": ["mode"] },
+      "then": { "required": ["ladder"] }
+    },
+    {
+      "if": { "properties": { "mode": { "const": "random_weighted" } }, "required": ["mode"] },
+      "then": { "required": ["weights"] }
+    },
+    {
+      "if": { "properties": { "scope": { "const": "session" } }, "required": ["scope"] },
+      "then": {
+        "not": {},
+        "description": "session scope rejected in MVP graph validation (GV-035)"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "mode": "fixed",
+      "value": 2,
+      "scope": "feature_frame",
+      "applyTo": "all_wins_in_frame"
+    }
+  ],
+  "x-invalidExamples": [
+    {
+      "description": "Session scope forbidden in MVP",
+      "value": {
+        "mode": "fixed",
+        "value": 2,
+        "scope": "session",
+        "applyTo": "all_wins_in_frame"
+      }
+    },
+    {
+      "description": "Ladder mode without ladder array",
+      "value": {
+        "mode": "ladder",
+        "value": 1,
+        "scope": "feature_frame",
+        "applyTo": "all_wins_in_frame"
+      }
+    },
+    {
+      "description": "Multiplier value below minimum",
+      "value": {
+        "mode": "fixed",
+        "value": 0,
+        "scope": "feature_frame",
+        "applyTo": "all_wins_in_frame"
+      }
+    }
+  ]
+}

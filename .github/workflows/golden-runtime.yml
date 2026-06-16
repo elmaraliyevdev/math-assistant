@@ -1,0 +1,40 @@
+name: Golden Runtime Validation
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  golden-runtime:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/runtime_core
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Golden runtime validation (pytest)
+        run: uv run pytest tests/golden/test_golden_runtime_validation.py -m golden_runtime -v
+
+      - name: Golden runner CLI
+        run: uv run golden-runner --all
+
+      - name: Golden determinism check
+        run: uv run golden-runner --all --determinism
+
+      - name: Simulation engine tests
+        run: uv run pytest tests/simulation/ -v --cov=runtime_core/simulation --cov-fail-under=90
+
+      - name: Mathematical engine tests
+        run: uv run pytest tests/mathematical/ -v --cov=runtime_core/mathematical --cov-fail-under=95
+
+      - name: Certification smoke tests
+        run: uv run pytest tests/certification/ -m certification -v
