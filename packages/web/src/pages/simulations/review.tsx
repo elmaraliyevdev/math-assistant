@@ -15,6 +15,7 @@ import { useSimulationWorkflow } from '@/features/collaboration/hooks/use-collab
 import { RoleBadge } from '@/features/organizations/components/RoleBadge'
 import { useOrganizationPermissions } from '@/features/organizations/use-organizations'
 import { CertificationReadinessPanel } from '@/features/mathematics/components/CertificationReadinessPanel'
+import { useSimulation } from '@/features/simulations/hooks/use-simulations'
 import { useSimulationCalibration } from '@/features/workbench/hooks/use-workbench'
 
 export function SimulationReviewPage() {
