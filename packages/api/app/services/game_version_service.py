@@ -109,11 +109,18 @@ class GameVersionService:
                 ],
             )
 
-        existing = await self.versions.get_by_content_hash(result.content_hash)
+        existing = await self.versions.get_by_organization_and_content_hash(
+            game.organization_id,
+            result.content_hash,
+        )
         if existing is not None:
             raise DuplicateGameVersionError(
                 content_hash=result.content_hash,
                 existing_version_id=str(existing.id),
+                existing_version_name=f"v{existing.version}",
+                existing_game_id=str(existing.game_id),
+                existing_game_name=existing.game.name,
+                created_at=existing.created_at.isoformat(),
             )
 
         findings_payload = [
@@ -122,6 +129,7 @@ class GameVersionService:
         next_version = await self.versions.get_max_version(game_id) + 1
         version = GameVersion(
             game_id=game_id,
+            organization_id=game.organization_id,
             version=next_version,
             content_hash=result.content_hash,
             canonical_json=body.canonical_json,

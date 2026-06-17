@@ -73,7 +73,7 @@ def test_create_version_auto_increments(
     assert second.json()["version"] == 2
 
 
-def test_duplicate_content_hash_conflict(
+def test_duplicate_content_hash_conflict_within_organization(
     api_client: TestClient,
     auth_context: dict,
     valid_canonical_json: dict,
@@ -97,7 +97,76 @@ def test_duplicate_content_hash_conflict(
     assert duplicate.status_code == 409
     body = duplicate.json()
     assert body["error"]["code"] == "DUPLICATE_GAME_VERSION"
-    assert body["error"]["details"]["contentHash"] == first.json()["contentHash"]
+    details = body["error"]["details"]
+    assert details["contentHash"] == first.json()["contentHash"]
+    assert details["existingVersionId"] == first.json()["id"]
+    assert details["existingVersionName"] == "v1"
+    assert details["existingGameId"] == game_id
+    assert details["existingGameName"] == "Version Host Game"
+    assert details["createdAt"]
+
+
+def test_duplicate_content_hash_allowed_across_organizations(
+    api_client: TestClient,
+    valid_canonical_json: dict,
+) -> None:
+    from tests.api.auth_helpers import register_and_auth
+
+    org_a = register_and_auth(api_client, email="org-a@example.com")
+    org_b = register_and_auth(api_client, email="org-b@example.com")
+    payload = {
+        "canonicalJson": valid_canonical_json,
+        "engineVersion": "runtime-core@1.8.0",
+    }
+
+    game_a = _create_game(api_client, org_a)
+    game_b = _create_game(api_client, org_b)
+
+    first = api_client.post(
+        f"/games/{game_a}/versions",
+        json=payload,
+        headers=org_a["headers"],
+    )
+    second = api_client.post(
+        f"/games/{game_b}/versions",
+        json=payload,
+        headers=org_b["headers"],
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert first.json()["contentHash"] == second.json()["contentHash"]
+
+
+def test_template_upload_allowed_across_organizations(
+    api_client: TestClient,
+    valid_canonical_json: dict,
+) -> None:
+    from tests.api.auth_helpers import register_and_auth
+
+    org_a = register_and_auth(api_client, email="template-a@example.com")
+    org_b = register_and_auth(api_client, email="template-b@example.com")
+    payload = {
+        "canonicalJson": valid_canonical_json,
+        "engineVersion": "runtime-core@1.8.0",
+    }
+
+    game_a = _create_game(api_client, org_a)
+    game_b = _create_game(api_client, org_b)
+
+    first = api_client.post(
+        f"/games/{game_a}/versions",
+        json=payload,
+        headers=org_a["headers"],
+    )
+    second = api_client.post(
+        f"/games/{game_b}/versions",
+        json=payload,
+        headers=org_b["headers"],
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
 
 
 def test_validation_failure(

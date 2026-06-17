@@ -62,7 +62,7 @@ services:
       dockerfile: packages/api/Dockerfile
     restart: unless-stopped
     profiles: ["mvp", "enterprise"]
-    command: celery -A app.distributed.celery_app worker --loglevel=info -Q simulations --concurrency=1
+    command: uv run celery -A app.distributed.celery_app worker --loglevel=info -Q simulations --concurrency=1
     environment:
       API_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-math_assistant}
       API_JWT_SECRET_KEY: ${API_JWT_SECRET_KEY:?set API_JWT_SECRET_KEY}
@@ -95,8 +95,8 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     depends_on:

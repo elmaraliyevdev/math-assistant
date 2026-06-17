@@ -370,6 +370,10 @@ export const handlers = [
         theoryVsSimulationDelta: -0.1,
         withinTolerance: true,
         tolerance: 0.1,
+        rtpGapPp: 0.1,
+        discrepancySeverity: 'minor',
+        certificationStatus: 'cleared',
+        certificationBlockThresholdPp: 25,
       },
       discrepancy: {
         items: [
@@ -393,6 +397,12 @@ export const handlers = [
         summary: 'Within tolerance',
       },
       recommendations: [],
+      certificationReadiness: {
+        certificationStatus: 'cleared',
+        blockingIssues: [],
+        requiredActions: [],
+        estimatedIterationsRemaining: 0,
+      },
       engineVersion: 'runtime-core@1.8.0',
     }),
   ),

@@ -74,7 +74,7 @@ def test_discrepancy_summary_paths() -> None:
         rtp_variance=0.01,
     )
     assert analysis.summary
-    assert any(item.status == "critical" for item in analysis.items)
+    assert any(item.status == "certification_blocked" for item in analysis.items)
 
 
 def test_recommendations_when_below_target() -> None:
@@ -94,7 +94,10 @@ def test_recommendations_when_below_target() -> None:
         features,
     )
     assert recommendations
-    assert any("Increase" in rec.action for rec in recommendations)
+    assert any(
+        rec.category in {"base_rtp", "paytable_redesign", "hold_and_win"}
+        for rec in recommendations
+    )
 
 
 def test_recommendations_simulation_gap() -> None:
@@ -153,9 +156,25 @@ def test_export_helpers_from_report_module() -> None:
 
 
 def test_lower_rtp_recommendations_with_features() -> None:
+    from runtime_core.mathematical.models import RtpDecompositionChart
+
     payload = load_golden_fixture_json("fixture-02-base-free-spins", repo_root=_repo_root())
     game = GameVersion.model_validate(payload)
-    theoretical = calculate_theoretical_rtp(game)
+    chart = RtpDecompositionChart(
+        base=30.0,
+        free_spins=50.0,
+        hold_and_win=5.0,
+        jackpot=0.0,
+        total_rtp=85.0,
+    )
+    theoretical = TheoreticalRtpResult(
+        totalRtp=chart.total_rtp / 100.0,
+        baseRtp=chart.base / 100.0,
+        scatterRtp=0.0,
+        lineRtp=chart.base / 100.0,
+        outcomeCount=1000,
+        reelSetId="base_game",
+    )
     features = calculate_feature_probabilities(game)
     calibration = calibrate_rtp(
         theoretical_rtp=theoretical,
@@ -167,14 +186,35 @@ def test_lower_rtp_recommendations_with_features() -> None:
         calibration,
         theoretical,
         features,
+        decomposition=chart,
     )
-    assert any("scatter frequency" in rec.action for rec in recommendations)
+    assert any(
+        "free-spin award" in rec.action.lower() or "award values" in rec.action.lower()
+        for rec in recommendations
+    )
+    assert not any("scatter frequency" in rec.action.lower() for rec in recommendations)
 
 
 def test_jackpot_lower_recommendation() -> None:
+    from runtime_core.mathematical.models import RtpDecompositionChart
+
     payload = load_golden_fixture_json("fixture-03-base-hold-win", repo_root=_repo_root())
     game = GameVersion.model_validate(payload)
-    theoretical = calculate_theoretical_rtp(game)
+    chart = RtpDecompositionChart(
+        base=30.0,
+        free_spins=25.0,
+        hold_and_win=10.0,
+        jackpot=45.0,
+        total_rtp=110.0,
+    )
+    theoretical = TheoreticalRtpResult(
+        totalRtp=chart.total_rtp / 100.0,
+        baseRtp=chart.base / 100.0,
+        scatterRtp=0.0,
+        lineRtp=chart.base / 100.0,
+        outcomeCount=1000,
+        reelSetId="base_game",
+    )
     calibration = calibrate_rtp(
         theoretical_rtp=theoretical,
         target_rtp=1.0,
@@ -185,6 +225,7 @@ def test_jackpot_lower_recommendation() -> None:
         calibration,
         theoretical,
         calculate_feature_probabilities(game),
+        decomposition=chart,
     )
     assert any("GRAND" in rec.action for rec in recommendations)
 
@@ -268,7 +309,7 @@ def test_discrepancy_warning_and_divergence_summaries() -> None:
         tolerance=0.1,
     )
     warning_analysis = analyze_discrepancies(calibration)
-    assert "outside tolerance" in warning_analysis.summary
+    assert "diverge from target" in warning_analysis.summary
 
     no_target = calibrate_rtp(theoretical_rtp=theoretical)
     assert analyze_discrepancies(no_target).summary == "Discrepancy analysis complete."
@@ -305,7 +346,10 @@ def test_free_spin_award_recommendation() -> None:
         theoretical,
         calculate_feature_probabilities(game),
     )
-    assert any("Free Spins awards" in rec.action for rec in recommendations)
+    assert any(
+        rec.category in {"base_rtp", "paytable_redesign", "hold_and_win"}
+        for rec in recommendations
+    )
 
 
 def test_certification_document_id() -> None:

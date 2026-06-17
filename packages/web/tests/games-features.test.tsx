@@ -131,8 +131,12 @@ describe('useCreateGameVersion errors', () => {
               code: 'DUPLICATE_GAME_VERSION',
               message: 'duplicate',
               details: {
-                contentHash: 'abc123',
+                contentHash: 'abc',
                 existingVersionId: 'version-1',
+                existingVersionName: 'v1',
+                existingGameId: 'game-1',
+                existingGameName: 'Lucky Stars',
+                createdAt: '2026-01-01T00:00:00Z',
               },
             },
           },
@@ -153,9 +157,10 @@ describe('useCreateGameVersion errors', () => {
     }
 
     await waitFor(() => {
-      expect(getDuplicateVersionDetails(result.current.error)?.contentHash).toBe(
-        'abc123',
-      )
+      const details = getDuplicateVersionDetails(result.current.error)
+      expect(details?.contentHash).toBe('abc')
+      expect(details?.existingVersionName).toBe('v1')
+      expect(details?.existingGameName).toBe('Lucky Stars')
     })
   })
 })

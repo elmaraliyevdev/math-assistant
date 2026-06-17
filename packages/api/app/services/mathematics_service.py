@@ -20,6 +20,7 @@ from app.schemas.mathematics import (
 )
 from app.services.simulation_service import SimulationService
 from runtime_core.domain.game_version import GameVersion
+from runtime_core.mathematical.models import RtpDecompositionChart
 from runtime_core.theoretical.report import (
     build_calibration_report,
     build_theoretical_analysis,
@@ -72,11 +73,13 @@ class MathematicsService:
         body: CalibrateRequest,
     ) -> CalibrateResponse:
         game = await self._load_game(auth, body.game_version_id)
-        simulated_rtp, feature_frequencies, rtp_variance = await self._resolve_simulation_inputs(
-            auth,
-            body.simulation_id,
-            body.simulated_rtp,
-            None,
+        simulated_rtp, feature_frequencies, rtp_variance, decomposition = (
+            await self._resolve_simulation_inputs(
+                auth,
+                body.simulation_id,
+                body.simulated_rtp,
+                None,
+            )
         )
         payload = build_calibration_report(
             game,
@@ -86,6 +89,7 @@ class MathematicsService:
             total_bet_minor_units=body.total_bet_minor_units,
             reel_set_id=body.reel_set_id,
             tolerance=body.tolerance,
+            decomposition=decomposition,
         )
         return CalibrateResponse.model_validate(payload)
 
@@ -95,11 +99,13 @@ class MathematicsService:
         body: CertificationReportRequest,
     ) -> tuple[CertificationReportResponse | bytes, str, str]:
         game = await self._load_game(auth, body.game_version_id)
-        simulated_rtp, feature_frequencies, rtp_variance = await self._resolve_simulation_inputs(
-            auth,
-            body.simulation_id,
-            body.simulated_rtp,
-            body.rtp_variance,
+        simulated_rtp, feature_frequencies, rtp_variance, decomposition = (
+            await self._resolve_simulation_inputs(
+                auth,
+                body.simulation_id,
+                body.simulated_rtp,
+                body.rtp_variance,
+            )
         )
         report = build_certification_report(
             game,
@@ -109,6 +115,7 @@ class MathematicsService:
             total_bet_minor_units=body.total_bet_minor_units,
             reel_set_id=body.reel_set_id,
             tolerance=body.tolerance,
+            decomposition=decomposition,
         )
         if body.export_format == "pdf":
             content = export_certification_pdf(report)
@@ -157,9 +164,9 @@ class MathematicsService:
         simulation_id: uuid.UUID | None,
         simulated_rtp: float | None,
         rtp_variance: float | None,
-    ) -> tuple[float | None, dict[str, float] | None, float | None]:
+    ) -> tuple[float | None, dict[str, float] | None, float | None, RtpDecompositionChart | None]:
         if simulation_id is None:
-            return simulated_rtp, None, rtp_variance
+            return simulated_rtp, None, rtp_variance, None
 
         try:
             results = await self.simulations.get_simulation_results(auth, simulation_id)
@@ -179,4 +186,13 @@ class MathematicsService:
         if resolved_variance is None and results.summary.volatility is not None:
             resolved_variance = results.summary.volatility**2
 
-        return resolved_rtp, feature_frequencies, resolved_variance
+        chart = results.rtp_decomposition_chart
+        decomposition = RtpDecompositionChart(
+            base=chart.base,
+            free_spins=chart.free_spins,
+            hold_and_win=chart.hold_and_win,
+            jackpot=chart.jackpot,
+            total_rtp=chart.total_rtp,
+        )
+
+        return resolved_rtp, feature_frequencies, resolved_variance, decomposition

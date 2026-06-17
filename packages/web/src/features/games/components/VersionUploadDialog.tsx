@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { TemplateSelector } from '@/features/game-templates/components/TemplateSelector'
 import { useGameTemplates } from '@/features/game-templates/hooks/use-game-templates'
 import type { GameTemplate, VersionUploadTab } from '@/features/game-templates/types'
+import { DuplicateVersionNotice } from '@/features/games/components/DuplicateVersionNotice'
 import { ValidationFindingsTable } from '@/features/games/components/ValidationFindingsTable'
 import {
   DEFAULT_ENGINE_VERSION,
@@ -236,19 +237,22 @@ export function VersionUploadDialog({
           )}
 
           {duplicateDetails && (
-            <p className="text-sm text-amber-700 dark:text-amber-300">
-              Duplicate content hash: {duplicateDetails.contentHash}
-            </p>
+            <DuplicateVersionNotice
+              details={duplicateDetails}
+              onCancel={() => handleClose(false)}
+            />
           )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => handleClose(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createVersion.isPending}>
-              {createVersion.isPending ? 'Uploading…' : 'Create version'}
-            </Button>
-          </DialogFooter>
+          {!duplicateDetails && (
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleClose(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createVersion.isPending}>
+                {createVersion.isPending ? 'Uploading…' : 'Create version'}
+              </Button>
+            </DialogFooter>
+          )}
         </form>
       </DialogContent>
     </Dialog>

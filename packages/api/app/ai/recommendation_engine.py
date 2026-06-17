@@ -82,6 +82,9 @@ def recommend_calibration(
                     "category": rec.category,
                     "action": rec.action,
                     "expectedRtpImpact": rec.expected_rtp_impact,
+                    "estimatedRtpContributionPp": rec.estimated_rtp_contribution_pp,
+                    "priority": rec.priority,
+                    "discrepancySeverity": rec.discrepancy_severity,
                 },
             )
             citations.append(

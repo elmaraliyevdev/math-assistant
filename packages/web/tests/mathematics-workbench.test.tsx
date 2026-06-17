@@ -33,6 +33,10 @@ const calibrateData: CalibrateResponse = {
     theoryVsSimulationDelta: -0.02,
     withinTolerance: false,
     tolerance: 0.1,
+    rtpGapPp: 90.88,
+    discrepancySeverity: 'critical',
+    certificationStatus: 'certification_blocked',
+    certificationBlockThresholdPp: 25,
   },
   discrepancy: {
     summary: 'Metrics outside tolerance.',
@@ -49,12 +53,21 @@ const calibrateData: CalibrateResponse = {
   },
   recommendations: [
     {
-      severity: 'warning',
-      category: 'paytable',
-      action: 'Increase H1 5OAK multiplier from 100x to 120x.',
-      expectedRtpImpact: 'Estimated +2.0 percentage points toward target RTP.',
+      severity: 'critical',
+      category: 'paytable_redesign',
+      action: 'Paytable redesign: expand line-pay coverage with lower-symbol wins.',
+      expectedRtpImpact: 'Estimated +40.90 percentage points toward target RTP.',
+      estimatedRtpContributionPp: 40.9,
+      priority: 90,
+      discrepancySeverity: 'critical',
     },
   ],
+  certificationReadiness: {
+    certificationStatus: 'certification_blocked',
+    blockingIssues: ['RTP gap 90.88 pp exceeds certification block threshold (25 pp).'],
+    requiredActions: ['Paytable redesign: expand line-pay coverage with lower-symbol wins.'],
+    estimatedIterationsRemaining: 3,
+  },
   engineVersion: 'runtime-core@1.8.0',
 }
 
@@ -87,8 +100,11 @@ describe('Mathematics workbench components', () => {
 
   it('renders calibration gauges and recommendations', () => {
     render(<CalibrationDashboard data={calibrateData} />)
+    expect(screen.getByText('Certification Readiness')).toBeInTheDocument()
     expect(screen.getByText('Target RTP')).toBeInTheDocument()
-    expect(screen.getByText('Increase H1 5OAK multiplier from 100x to 120x.')).toBeInTheDocument()
+    expect(screen.getAllByText(/Paytable redesign/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/certification blocked/i).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Est\. 40\.90 pp/i)).toBeInTheDocument()
   })
 
   it('renders certification preview and download actions', () => {

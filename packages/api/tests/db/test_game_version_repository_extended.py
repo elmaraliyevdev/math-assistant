@@ -23,6 +23,7 @@ async def test_get_by_id_for_game_and_max_version(
     first = await game_version_repo.add(
         GameVersion(
             game_id=sample_game.id,
+            organization_id=sample_game.organization_id,
             version=1,
             content_hash="b" * 64,
             canonical_json=sample_canonical_json,
@@ -32,6 +33,7 @@ async def test_get_by_id_for_game_and_max_version(
     second = await game_version_repo.add(
         GameVersion(
             game_id=sample_game.id,
+            organization_id=sample_game.organization_id,
             version=2,
             content_hash="c" * 64,
             canonical_json=sample_canonical_json,

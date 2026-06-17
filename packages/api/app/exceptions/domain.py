@@ -48,12 +48,25 @@ class DuplicateGameVersionError(DomainError):
     code = "DUPLICATE_GAME_VERSION"
     status_code = 409
 
-    def __init__(self, *, content_hash: str, existing_version_id: str) -> None:
+    def __init__(
+        self,
+        *,
+        content_hash: str,
+        existing_version_id: str,
+        existing_version_name: str,
+        existing_game_id: str,
+        existing_game_name: str,
+        created_at: str,
+    ) -> None:
         super().__init__(
-            message="a game version with this content hash already exists",
+            message="this version already exists in your organization",
             details={
                 "contentHash": content_hash,
                 "existingVersionId": existing_version_id,
+                "existingVersionName": existing_version_name,
+                "existingGameId": existing_game_id,
+                "existingGameName": existing_game_name,
+                "createdAt": created_at,
             },
         )
 

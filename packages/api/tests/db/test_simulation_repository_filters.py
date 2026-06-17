@@ -24,6 +24,7 @@ async def test_search_paginated_with_filters(
     version = await game_version_repo.add(
         GameVersion(
             game_id=sample_game.id,
+            organization_id=sample_game.organization_id,
             version=1,
             content_hash="d" * 64,
             canonical_json=sample_canonical_json,

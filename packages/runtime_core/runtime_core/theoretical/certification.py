@@ -6,9 +6,13 @@ import uuid
 
 from runtime_core.common.version import ENGINE_VERSION
 from runtime_core.domain.game_version import GameVersion
+from runtime_core.mathematical.models import RtpDecompositionChart
 from runtime_core.theoretical.calibration import (
     calibrate_rtp,
     generate_calibration_recommendations,
+)
+from runtime_core.theoretical.design_aware_recommendations import (
+    build_certification_readiness_summary,
 )
 from runtime_core.theoretical.discrepancy import analyze_discrepancies
 from runtime_core.theoretical.models import (
@@ -28,6 +32,7 @@ def build_certification_report(
     total_bet_minor_units: int | None = None,
     reel_set_id: str | None = None,
     tolerance: float | None = None,
+    decomposition: RtpDecompositionChart | None = None,
 ) -> CertificationReport:
     """Assemble a certification-ready mathematics report."""
     theoretical = calculate_theoretical_rtp(
@@ -61,7 +66,9 @@ def build_certification_report(
         calibration,
         theoretical,
         feature_probabilities,
+        decomposition=decomposition,
     )
+    readiness = build_certification_readiness_summary(calibration, recommendations)
 
     simulated_percent = (
         round(simulated_rtp * 100.0, 4) if simulated_rtp is not None else None
@@ -83,6 +90,7 @@ def build_certification_report(
         calibration=calibration,
         discrepancy=discrepancy,
         recommendations=recommendations,
+        certificationReadiness=readiness,
         engineVersion=ENGINE_VERSION,
     )
 

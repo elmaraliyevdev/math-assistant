@@ -46,14 +46,14 @@ def test_json_document_has_postgresql_variant() -> None:
     assert sqlite_type.__class__.__name__ == "_SQliteJson"
 
 
-def test_game_version_content_hash_unique_constraint() -> None:
+def test_game_version_org_content_hash_unique_constraint() -> None:
     table = GameVersion.__table__
     unique_constraints = [
         constraint.name
         for constraint in table.constraints
         if isinstance(constraint, UniqueConstraint) and constraint.name
     ]
-    assert "uq_game_versions_content_hash" in unique_constraints
+    assert "uq_game_versions_org_content_hash" in unique_constraints
 
 
 def test_simulation_indexes() -> None:

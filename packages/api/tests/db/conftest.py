@@ -145,6 +145,7 @@ def sample_game_version(
 ) -> GameVersion:
     return GameVersion(
         game=sample_game,
+        organization=sample_game.organization,
         version=1,
         content_hash="a" * 64,
         canonical_json=sample_canonical_json,

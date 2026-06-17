@@ -98,6 +98,10 @@ const calibrateData: CalibrateResponse = {
     theoryVsSimulationDelta: -0.5,
     withinTolerance: false,
     tolerance: 0.1,
+    rtpGapPp: 0.5,
+    discrepancySeverity: 'minor',
+    certificationStatus: 'cleared',
+    certificationBlockThresholdPp: 25,
   },
   discrepancy: {
     summary: 'Outside tolerance.',
@@ -129,6 +133,12 @@ const calibrateData: CalibrateResponse = {
     ],
   },
   recommendations: [],
+  certificationReadiness: {
+    certificationStatus: 'cleared',
+    blockingIssues: [],
+    requiredActions: [],
+    estimatedIterationsRemaining: 0,
+  },
   engineVersion: 'runtime-core@1.8.0',
 }
 

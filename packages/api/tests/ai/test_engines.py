@@ -196,10 +196,13 @@ def test_recommend_calibration_merges_sources(valid_canonical_json: dict) -> Non
             discrepancy=DiscrepancyAnalysisResponse(items=[], summary="gap"),
             recommendations=[
                 CalibrationRecommendationResponse(
-                    severity="warning",
+                    severity="critical",
                     category="paytable",
-                    action="Increase H1 5OAK multiplier from 100x to 120x.",
-                    expectedRtpImpact="Estimated +2.0 percentage points.",
+                    action="Paytable redesign: Re-scale line-pay multipliers across all symbol tiers.",
+                    expectedRtpImpact="Estimated +40.90 percentage points toward target RTP.",
+                    estimatedRtpContributionPp=40.9,
+                    priority=90,
+                    discrepancySeverity="critical",
                 ),
             ],
             engine_version="runtime-core@1.8.0",
@@ -207,7 +210,7 @@ def test_recommend_calibration_merges_sources(valid_canonical_json: dict) -> Non
     )
     payload = recommend_calibration(context, target_rtp=96.0)
     assert payload["recommendations"]
-    assert any("Increase H1" in rec["action"] for rec in payload["recommendations"])
+    assert any("Paytable redesign" in rec["action"] for rec in payload["recommendations"])
     assert any(citation["source"] == "calibration_report" for citation in payload["citations"])
 
 

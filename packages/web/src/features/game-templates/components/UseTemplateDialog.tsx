@@ -17,9 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DEFAULT_ENGINE_VERSION } from '@/features/games/schemas/game-schemas'
-import { useGames, useCreateGameVersion } from '@/features/games/hooks/use-games'
 import type { GameTemplate } from '@/features/game-templates/types'
+import { DuplicateVersionNotice } from '@/features/games/components/DuplicateVersionNotice'
+import {
+  getDuplicateVersionDetails,
+  useCreateGameVersion,
+  useGames,
+} from '@/features/games/hooks/use-games'
+import { DEFAULT_ENGINE_VERSION } from '@/features/games/schemas/game-schemas'
 
 interface UseTemplateDialogProps {
   template: GameTemplate | null
@@ -35,6 +40,9 @@ export function UseTemplateDialog({
   const games = useGames({ page: 1, pageSize: 100 })
   const [gameId, setGameId] = useState('')
   const createVersion = useCreateGameVersion(gameId, { navigateTo: 'game' })
+  const duplicateDetails = createVersion.isError
+    ? getDuplicateVersionDetails(createVersion.error)
+    : null
 
   function handleClose(nextOpen: boolean) {
     if (!nextOpen) {
@@ -70,23 +78,32 @@ export function UseTemplateDialog({
           </Select>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)}>
-            Cancel
-          </Button>
-          <Button
-            disabled={!gameId || !template || createVersion.isPending}
-            onClick={() => {
-              if (!template) return
-              createVersion.mutate({
-                canonicalJson: template.canonicalJson,
-                engineVersion: DEFAULT_ENGINE_VERSION,
-              })
-            }}
-          >
-            {createVersion.isPending ? 'Uploading…' : 'Upload template'}
-          </Button>
-        </DialogFooter>
+        {duplicateDetails && (
+          <DuplicateVersionNotice
+            details={duplicateDetails}
+            onCancel={() => handleClose(false)}
+          />
+        )}
+
+        {!duplicateDetails && (
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleClose(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!gameId || !template || createVersion.isPending}
+              onClick={() => {
+                if (!template) return
+                createVersion.mutate({
+                  canonicalJson: template.canonicalJson,
+                  engineVersion: DEFAULT_ENGINE_VERSION,
+                })
+              }}
+            >
+              {createVersion.isPending ? 'Uploading…' : 'Upload template'}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )

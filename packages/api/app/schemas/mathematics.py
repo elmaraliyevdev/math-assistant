@@ -56,6 +56,13 @@ class CalibrationResultResponse(BaseModel):
     )
     within_tolerance: bool | None = Field(default=None, alias="withinTolerance")
     tolerance: float | None = None
+    rtp_gap_pp: float | None = Field(default=None, alias="rtpGapPp")
+    discrepancy_severity: str | None = Field(default=None, alias="discrepancySeverity")
+    certification_status: str | None = Field(default=None, alias="certificationStatus")
+    certification_block_threshold_pp: float | None = Field(
+        default=None,
+        alias="certificationBlockThresholdPp",
+    )
 
 
 class DiscrepancyItemResponse(BaseModel):
@@ -83,6 +90,23 @@ class CalibrationRecommendationResponse(BaseModel):
     category: str
     action: str
     expected_rtp_impact: str = Field(alias="expectedRtpImpact")
+    estimated_rtp_contribution_pp: float = Field(alias="estimatedRtpContributionPp")
+    priority: int = 1
+    discrepancy_severity: str = Field(alias="discrepancySeverity")
+    estimated_volatility_impact: str | None = Field(
+        default=None,
+        alias="estimatedVolatilityImpact",
+    )
+    exposure_impact: str | None = Field(default=None, alias="exposureImpact")
+
+
+class CertificationReadinessResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    certification_status: str = Field(alias="certificationStatus")
+    blocking_issues: list[str] = Field(alias="blockingIssues")
+    required_actions: list[str] = Field(alias="requiredActions")
+    estimated_iterations_remaining: int = Field(alias="estimatedIterationsRemaining")
 
 
 class CalibrateRequest(MathematicsBaseRequest):
@@ -98,6 +122,9 @@ class CalibrateResponse(BaseModel):
     calibration: CalibrationResultResponse
     discrepancy: DiscrepancyAnalysisResponse
     recommendations: list[CalibrationRecommendationResponse]
+    certification_readiness: CertificationReadinessResponse = Field(
+        alias="certificationReadiness",
+    )
     engine_version: str = Field(alias="engineVersion")
 
 
@@ -130,4 +157,8 @@ class CertificationReportResponse(BaseModel):
     calibration: CalibrationResultResponse | None = None
     discrepancy: DiscrepancyAnalysisResponse | None = None
     recommendations: list[CalibrationRecommendationResponse] = Field(default_factory=list)
+    certification_readiness: CertificationReadinessResponse | None = Field(
+        default=None,
+        alias="certificationReadiness",
+    )
     engine_version: str = Field(alias="engineVersion")

@@ -6,6 +6,7 @@ import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.db.models.game_version import GameVersion
 from app.db.repositories.base import BaseRepository
@@ -15,9 +16,18 @@ class GameVersionRepository(BaseRepository[GameVersion]):
     def __init__(self, session: AsyncSession) -> None:
         super().__init__(session, GameVersion)
 
-    async def get_by_content_hash(self, content_hash: str) -> GameVersion | None:
+    async def get_by_organization_and_content_hash(
+        self,
+        organization_id: uuid.UUID,
+        content_hash: str,
+    ) -> GameVersion | None:
         result = await self._session.scalars(
-            select(GameVersion).where(GameVersion.content_hash == content_hash),
+            select(GameVersion)
+            .options(selectinload(GameVersion.game))
+            .where(
+                GameVersion.organization_id == organization_id,
+                GameVersion.content_hash == content_hash,
+            ),
         )
         return result.first()
 

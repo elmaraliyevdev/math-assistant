@@ -397,6 +397,10 @@ export interface CalibrationResult {
   theoryVsSimulationDelta: number | null
   withinTolerance: boolean | null
   tolerance: number | null
+  rtpGapPp: number | null
+  discrepancySeverity: string | null
+  certificationStatus: string | null
+  certificationBlockThresholdPp: number | null
 }
 
 export interface DiscrepancyItem {
@@ -418,6 +422,18 @@ export interface CalibrationRecommendation {
   category: string
   action: string
   expectedRtpImpact: string
+  estimatedRtpContributionPp: number
+  priority: number
+  discrepancySeverity: string
+  estimatedVolatilityImpact?: string | null
+  exposureImpact?: string | null
+}
+
+export interface CertificationReadinessSummary {
+  certificationStatus: string
+  blockingIssues: string[]
+  requiredActions: string[]
+  estimatedIterationsRemaining: number
 }
 
 export interface CalibrateResponse {
@@ -426,6 +442,7 @@ export interface CalibrateResponse {
   calibration: CalibrationResult
   discrepancy: DiscrepancyAnalysis
   recommendations: CalibrationRecommendation[]
+  certificationReadiness: CertificationReadinessSummary
   engineVersion: string
 }
 
@@ -445,6 +462,7 @@ export interface CertificationReportResponse {
   calibration: CalibrationResult | null
   discrepancy: DiscrepancyAnalysis | null
   recommendations: CalibrationRecommendation[]
+  certificationReadiness?: CertificationReadinessSummary | null
   engineVersion: string
 }
 

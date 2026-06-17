@@ -75,7 +75,7 @@ def test_recommendation_rtp_below_target() -> None:
         _game(),
         rtp_validation=rtp_validation,
     )
-    assert any(item.title == "RTP Below Target" for item in recommendations)
+    assert any(item.title == "Moderate RTP Gap Below Target" for item in recommendations)
 
 
 def test_recommendation_high_free_spins_share() -> None:

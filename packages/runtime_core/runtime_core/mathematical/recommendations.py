@@ -6,6 +6,11 @@ from runtime_core.domain.game_version import GameVersion
 from runtime_core.mathematical.decomposition_chart import build_rtp_decomposition_chart
 from runtime_core.mathematical.models import RecommendationResult, RtpValidationResult
 from runtime_core.simulation.models import SimulationResult
+from runtime_core.theoretical.discrepancy_severity import (
+    DiscrepancySeverity,
+    classify_rtp_gap_pp,
+    resolve_certification_status,
+)
 
 
 def generate_recommendations(
@@ -26,25 +31,82 @@ def generate_recommendations(
 
     if target_percent is not None:
         gap = actual_percent - target_percent
-        if gap < -5.0:
+        severity = classify_rtp_gap_pp(gap)
+        certification_status = resolve_certification_status(gap)
+
+        if gap < -0.01:
+            if severity == DiscrepancySeverity.CRITICAL:
+                recommendations.append(
+                    RecommendationResult(
+                        severity="critical",
+                        title="Certification Blocked — RTP Below Target",
+                        description=(
+                            f"Simulated RTP is {actual_percent:.2f}% versus "
+                            f"{target_percent:.2f}% target ({abs(gap):.2f} pp gap, "
+                            f"{severity.value} severity). Do not apply micro-adjustments. "
+                            "Redesign paytable tiers, scatter frequency, free-spin awards, "
+                            "and feature RTP allocation before re-certification."
+                        ),
+                    ),
+                )
+            elif severity == DiscrepancySeverity.MAJOR:
+                recommendations.append(
+                    RecommendationResult(
+                        severity="warning",
+                        title="Major RTP Gap Below Target",
+                        description=(
+                            f"Simulated RTP is {abs(gap):.1f} percentage points below "
+                            f"the {target_percent:.1f}% target. Prioritize paytable redesign "
+                            "and feature rebalancing over single-symbol multiplier tweaks."
+                        ),
+                    ),
+                )
+            elif severity == DiscrepancySeverity.MODERATE:
+                recommendations.append(
+                    RecommendationResult(
+                        severity="warning",
+                        title="Moderate RTP Gap Below Target",
+                        description=(
+                            f"Simulated RTP is {abs(gap):.1f} percentage points below "
+                            f"the {target_percent:.1f}% target. Adjust paytable tiers, "
+                            "scatter weights, and feature awards in combination."
+                        ),
+                    ),
+                )
+            else:
+                recommendations.append(
+                    RecommendationResult(
+                        severity="info",
+                        title="Minor RTP Gap Below Target",
+                        description=(
+                            f"Simulated RTP is {abs(gap):.2f} percentage points below "
+                            f"the {target_percent:.1f}% target. Fine-tune top-tier "
+                            "multipliers or scatter weights."
+                        ),
+                    ),
+                )
+        elif gap > 0.01:
             recommendations.append(
                 RecommendationResult(
-                    severity="warning",
-                    title="RTP Below Target",
+                    severity="warning" if severity != DiscrepancySeverity.MINOR else "info",
+                    title="RTP Above Target",
                     description=(
-                        "Increase paytable values or feature awards to close the "
-                        f"{abs(gap):.1f} percentage-point gap to the {target_percent:.1f}% target."
+                        f"Reduce paytable multipliers, feature awards, or jackpot tiers "
+                        f"to lower RTP by {gap:.1f} percentage points "
+                        f"({severity.value} severity)."
                     ),
                 ),
             )
-        elif gap > 5.0:
-            recommendations.append(
+
+        if certification_status == "certification_blocked":
+            recommendations.insert(
+                0,
                 RecommendationResult(
-                    severity="warning",
-                    title="RTP Above Target",
+                    severity="critical",
+                    title="Certification Blocked",
                     description=(
-                        "Reduce paytable multipliers, feature awards, or jackpot tiers "
-                        f"to lower RTP by {gap:.1f} percentage points."
+                        "Target RTP deviation exceeds the configurable certification "
+                        "threshold. Complete systemic mathematics revision before approval."
                     ),
                 ),
             )

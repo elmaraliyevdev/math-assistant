@@ -7,11 +7,15 @@ from typing import Any
 
 from runtime_core.common.version import ENGINE_VERSION
 from runtime_core.domain.game_version import GameVersion
+from runtime_core.mathematical.models import RtpDecompositionChart
 from runtime_core.theoretical.calibration import (
     calibrate_rtp,
     generate_calibration_recommendations,
 )
 from runtime_core.theoretical.certification import build_certification_report
+from runtime_core.theoretical.design_aware_recommendations import (
+    build_certification_readiness_summary,
+)
 from runtime_core.theoretical.discrepancy import analyze_discrepancies
 from runtime_core.theoretical.models import (
     CertificationReport,
@@ -50,6 +54,7 @@ def build_calibration_report(
     total_bet_minor_units: int | None = None,
     reel_set_id: str | None = None,
     tolerance: float | None = None,
+    decomposition: RtpDecompositionChart | None = None,
 ) -> dict[str, Any]:
     """Return calibration payload with recommendations and discrepancy analysis."""
     theoretical = calculate_theoretical_rtp(
@@ -83,7 +88,9 @@ def build_calibration_report(
         calibration,
         theoretical,
         feature_probabilities,
+        decomposition=decomposition,
     )
+    readiness = build_certification_readiness_summary(calibration, recommendations)
 
     return {
         "theoreticalRtp": theoretical.model_dump(mode="json", by_alias=True),
@@ -96,6 +103,7 @@ def build_calibration_report(
         "recommendations": [
             item.model_dump(mode="json", by_alias=True) for item in recommendations
         ],
+        "certificationReadiness": readiness.model_dump(mode="json", by_alias=True),
         "engineVersion": ENGINE_VERSION,
     }
 

@@ -14,7 +14,8 @@ import {
 import { useSimulationWorkflow } from '@/features/collaboration/hooks/use-collaboration'
 import { RoleBadge } from '@/features/organizations/components/RoleBadge'
 import { useOrganizationPermissions } from '@/features/organizations/use-organizations'
-import { useSimulation } from '@/features/simulations/hooks/use-simulations'
+import { CertificationReadinessPanel } from '@/features/mathematics/components/CertificationReadinessPanel'
+import { useSimulationCalibration } from '@/features/workbench/hooks/use-workbench'
 
 export function SimulationReviewPage() {
   const { simulationId } = useParams({ strict: false }) as {
@@ -23,6 +24,11 @@ export function SimulationReviewPage() {
   const search = useSearch({ strict: false }) as { action?: string }
   const simulation = useSimulation(simulationId, true)
   const workflow = useSimulationWorkflow(simulationId, Boolean(simulation.data))
+  const calibration = useSimulationCalibration(
+    simulation.data?.gameVersionId,
+    simulationId,
+    simulation.data?.status === 'completed',
+  )
   const { role } = useOrganizationPermissions()
 
   const initialDialog =
@@ -64,6 +70,12 @@ export function SimulationReviewPage() {
 
       <ReviewNextActionCard workflow={workflow.data} role={role} />
       <PendingApprovalsNotice workflow={workflow.data} />
+
+      {calibration.data?.certificationReadiness && (
+        <CertificationReadinessPanel
+          readiness={calibration.data.certificationReadiness}
+        />
+      )}
 
       {workflow.data && <WorkflowStatusCard status={workflow.data.status} />}
 

@@ -183,7 +183,6 @@ export function useCreateGameVersion(
     onError: (error) => {
       const code = getApiErrorCode(error)
       if (code === 'DUPLICATE_GAME_VERSION') {
-        toast.warning('A version with this content hash already exists')
         return
       }
       if (code !== 'VALIDATION_FAILED') {
@@ -193,12 +192,39 @@ export function useCreateGameVersion(
   })
 }
 
-export function getDuplicateVersionDetails(error: unknown) {
+export interface DuplicateVersionDetails {
+  contentHash?: string
+  existingVersionId: string
+  existingVersionName: string
+  existingGameId: string
+  existingGameName: string
+  createdAt: string
+}
+
+export function getDuplicateVersionDetails(
+  error: unknown,
+): DuplicateVersionDetails | null {
   const apiError = parseApiError(error)
-  if (apiError?.code !== 'DUPLICATE_GAME_VERSION') {
+  if (apiError?.code !== 'DUPLICATE_GAME_VERSION' || !apiError.details) {
     return null
   }
-  return apiError.details as
-    | { contentHash?: string; existingVersionId?: string }
-    | undefined
+  const details = apiError.details
+  if (
+    typeof details.existingVersionId !== 'string' ||
+    typeof details.existingVersionName !== 'string' ||
+    typeof details.existingGameId !== 'string' ||
+    typeof details.existingGameName !== 'string' ||
+    typeof details.createdAt !== 'string'
+  ) {
+    return null
+  }
+  return {
+    contentHash:
+      typeof details.contentHash === 'string' ? details.contentHash : undefined,
+    existingVersionId: details.existingVersionId,
+    existingVersionName: details.existingVersionName,
+    existingGameId: details.existingGameId,
+    existingGameName: details.existingGameName,
+    createdAt: details.createdAt,
+  }
 }
