@@ -24,7 +24,11 @@ docker compose \
   up -d --build
 
 echo "==> Service status"
-docker compose -f docker-compose.prod.yml --profile mvp ps
+docker compose \
+  -f docker-compose.prod.yml \
+  --env-file "$ENV_FILE" \
+  --profile mvp \
+  ps
 
 echo "==> Health check"
 curl -sf "http://localhost:${WEB_PORT:-8080}/api/health" | head -c 200
