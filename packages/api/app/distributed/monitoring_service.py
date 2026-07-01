@@ -22,11 +22,17 @@ class MonitoringService:
     session_factory: async_sessionmaker[AsyncSession]
 
     def list_workers(self) -> WorkerListResponse:
-        from app.distributed.celery_app import celery_app
+        try:
+            from app.distributed.celery_app import celery_app
 
-        inspect = celery_app.control.inspect(timeout=1.0)
-        active = inspect.active() or {}
-        stats = inspect.stats() or {}
+            inspect = celery_app.control.inspect(timeout=1.0)
+            if inspect is None:
+                return WorkerListResponse(active_workers=0, items=[])
+            active = inspect.active() or {}
+            stats = inspect.stats() or {}
+        except Exception:
+            return WorkerListResponse(active_workers=0, items=[])
+
         items: list[WorkerStatusItem] = []
         for worker_name, worker_stats in stats.items():
             active_tasks = len(active.get(worker_name, []))

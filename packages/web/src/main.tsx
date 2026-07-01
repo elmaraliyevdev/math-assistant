@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 
 import { AppProviders } from '@/app/providers'
 import { router } from '@/app/router'
+import { Logo } from '@/components/logo'
 import { initSentry } from '@/lib/sentry'
 import { authService } from '@/services/auth'
 import { refreshTokenStorage } from '@/lib/refresh-token-storage'
@@ -46,8 +47,10 @@ function Bootstrap({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading…</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <Logo variant="icon" to={null} className="opacity-80" />
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Loading…</p>
       </div>
     )
   }

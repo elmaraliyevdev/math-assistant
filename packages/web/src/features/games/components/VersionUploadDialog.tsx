@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { FileJson, Upload } from 'lucide-react'
+import { FileJson, Sparkles, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -33,10 +33,10 @@ import {
 import { getApiErrorCode, getValidationFindings } from '@/lib/api-error'
 import { cn } from '@/lib/utils'
 
-const UPLOAD_TABS: Array<{ id: VersionUploadTab; label: string }> = [
-  { id: 'file', label: 'Upload File' },
-  { id: 'paste', label: 'Paste JSON' },
-  { id: 'templates', label: 'Templates' },
+const SOURCE_OPTIONS: Array<{ id: VersionUploadTab; label: string; description: string }> = [
+  { id: 'file', label: 'Upload JSON', description: 'Choose a canonical JSON file' },
+  { id: 'paste', label: 'Paste JSON', description: 'Paste canonical JSON directly' },
+  { id: 'templates', label: 'Use template', description: 'Start from a game template' },
 ]
 
 interface VersionUploadDialogProps {
@@ -51,7 +51,7 @@ export function VersionUploadDialog({
   onOpenChange,
 }: VersionUploadDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const createVersion = useCreateGameVersion(gameId)
+  const createVersion = useCreateGameVersion(gameId, { navigateTo: 'studio' })
   const templates = useGameTemplates()
   const [activeTab, setActiveTab] = useState<VersionUploadTab>('file')
   const [fileName, setFileName] = useState<string | null>(null)
@@ -109,29 +109,35 @@ export function VersionUploadDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Upload game version</DialogTitle>
+          <DialogTitle>Create version</DialogTitle>
           <DialogDescription>
-            Upload a canonical JSON file, paste JSON, or start from a template.
-            Validation runs before the version is saved.
+            Choose a source for your new mathematical design. You&apos;ll continue in the
+            Design Studio after creation.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex gap-1 rounded-lg border p-1">
-          {UPLOAD_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Choose source
+          </p>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {SOURCE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setActiveTab(option.id)}
+                className={cn(
+                  'rounded-xl border p-3 text-left transition-all duration-200',
+                  activeTab === option.id
+                    ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/30'
+                    : 'border-border/60 hover:bg-muted/30',
+                )}
+              >
+                <p className="text-sm font-medium">{option.label}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{option.description}</p>
+              </button>
+            ))}
+          </div>
         </div>
 
         <form
@@ -144,7 +150,7 @@ export function VersionUploadDialog({
           })}
         >
           {activeTab === 'file' && (
-            <div className="space-y-3">
+            <div className="space-y-3 rounded-xl bg-muted/20 p-4 ring-1 ring-border/30">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -196,7 +202,7 @@ export function VersionUploadDialog({
           {activeTab === 'templates' && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Pick a template to load canonical JSON into this upload.
+                Pick a template to start your new version.
               </p>
               <TemplateSelector
                 templates={templates}
@@ -208,9 +214,7 @@ export function VersionUploadDialog({
 
           {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
           {errors.canonicalJsonText && (
-            <p className="text-sm text-destructive">
-              {errors.canonicalJsonText.message}
-            </p>
+            <p className="text-sm text-destructive">{errors.canonicalJsonText.message}</p>
           )}
 
           {activeTab !== 'paste' && canonicalJsonText && (
@@ -248,8 +252,12 @@ export function VersionUploadDialog({
               <Button type="button" variant="outline" onClick={() => handleClose(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={createVersion.isPending}>
-                {createVersion.isPending ? 'Uploading…' : 'Create version'}
+              <Button
+                type="submit"
+                disabled={createVersion.isPending}
+              >
+                <Sparkles className="h-4 w-4" />
+                {createVersion.isPending ? 'Creating…' : 'Create version'}
               </Button>
             </DialogFooter>
           )}

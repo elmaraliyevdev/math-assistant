@@ -5,14 +5,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MetricsOverview } from '@/features/dashboard/components/MetricsOverview'
 import { SimulationExportMenu } from '@/features/exports/components/SimulationExportMenu'
 import { NotificationCenter } from '@/features/notifications/components/NotificationCenter'
-import { SettingsPage } from '@/pages/settings/index'
-import { AuditPage } from '@/pages/audit/index'
 import { exportsApi } from '@/services/exports'
 import { notificationsApi } from '@/services/notifications'
 import { settingsApi } from '@/services/settings'
 import { auditApi } from '@/services/audit'
 import { dashboardApi } from '@/services/dashboard'
-import { renderWithQuery } from './test-utils'
+import { renderAt, renderWithQuery } from './test-utils'
 
 describe('platform services', () => {
   it('loads notifications', async () => {
@@ -80,25 +78,23 @@ describe('notification center', () => {
   })
 })
 
-describe('audit page', () => {
+describe('audit section', () => {
   it('renders audit entries and filters', async () => {
     const user = userEvent.setup()
-    renderWithQuery(<AuditPage />)
+    await renderAt('/settings?section=audit')
 
-    expect(await screen.findByText(/auth\.login/i)).toBeInTheDocument()
-    await user.type(screen.getByLabelText(/user id/i), 'user-1')
-    await user.click(screen.getByLabelText(/from/i))
+    expect(await screen.findByText(/test user/i)).toBeInTheDocument()
+    await user.type(screen.getByPlaceholderText(/search activity/i), 'user-1')
   })
 })
 
 describe('settings page', () => {
   it('renders profile and notification preferences', async () => {
     const user = userEvent.setup()
-    renderWithQuery(<SettingsPage />)
+    await renderAt('/settings')
 
     expect(await screen.findByLabelText(/full name/i)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /save profile/i }))
-    await user.click(screen.getByLabelText(/simulation completed/i))
   })
 })
 

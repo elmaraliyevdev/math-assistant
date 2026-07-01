@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "paths": {
+      "@web/types/*": ["../web/src/types/*"],
+      "@web/services/*": ["../web/src/services/*"],
+      "@/*": ["../web/src/*"],
+      "@math-assistant/brand": ["../brand/src/index.ts"],
+      "@math-assistant/brand/*": ["../brand/src/*"]
+    }
+  },
+  "include": ["src", "tests"]
+}

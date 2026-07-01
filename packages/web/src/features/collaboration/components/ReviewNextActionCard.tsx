@@ -2,7 +2,7 @@ import { Badge, statusBadgeVariant } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PermissionActionButton } from '@/features/collaboration/components/PermissionActionButton'
 import { getReviewNextAction } from '@/features/collaboration/review-workflow'
-import type { SimulationWorkflow } from '@/features/collaboration/api/collaboration-api'
+import type { SimulationWorkflow } from '@/features/collaboration/types'
 import type { OrganizationRole } from '@/types/api'
 
 interface ReviewNextActionCardProps {

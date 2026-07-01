@@ -47,6 +47,8 @@ Runs PostgreSQL, API (in-process simulation backend), and web. Redis and Celery 
 
 Step-by-step instructions for Hetzner Cloud: **[docs/deployment/HETZNER.md](deployment/HETZNER.md)**.
 
+**Domain (landing on Vercel + app on Hetzner):** **[docs/deployment/DOMAIN_SETUP.md](deployment/DOMAIN_SETUP.md)**.
+
 ## Architecture
 
 | Service | Port | Description |

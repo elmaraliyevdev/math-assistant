@@ -3,6 +3,8 @@ import { Link } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { AuthLayout } from '@/components/public/AuthLayout'
+import { PageMeta } from '@/components/seo/PageMeta'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -12,8 +14,12 @@ import { getErrorMessage } from '@/services/api'
 
 const registerSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
-  email: z.email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.email('Enter a valid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Include at least one uppercase letter')
+    .regex(/[0-9]/, 'Include at least one number'),
 })
 
 type RegisterForm = z.infer<typeof registerSchema>
@@ -29,7 +35,8 @@ export function RegisterPage() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <AuthLayout>
+      <PageMeta title="Create account" path="/register" noIndex />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Create account</CardTitle>
@@ -41,7 +48,7 @@ export function RegisterPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" {...register('fullName')} />
+              <Input id="fullName" autoComplete="name" {...register('fullName')} />
               {errors.fullName && (
                 <p className="text-sm text-destructive">
                   {errors.fullName.message}
@@ -50,14 +57,19 @@ export function RegisterPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register('email')} />
+              <Input id="email" type="email" autoComplete="email" {...register('email')} />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register('password')} />
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                {...register('password')}
+              />
               {errors.password && (
                 <p className="text-sm text-destructive">
                   {errors.password.message}
@@ -85,6 +97,6 @@ export function RegisterPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   )
 }

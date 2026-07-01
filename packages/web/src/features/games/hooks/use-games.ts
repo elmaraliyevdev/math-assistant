@@ -147,7 +147,7 @@ export function useDeleteGame() {
   })
 }
 
-export type CreateVersionNavigateTo = 'game' | 'version'
+export type CreateVersionNavigateTo = 'game' | 'version' | 'studio'
 
 export function useCreateGameVersion(
   gameId: string,
@@ -173,6 +173,11 @@ export function useCreateGameVersion(
       }
       if (navigateTo === 'game') {
         await navigate({ to: '/games/$gameId', params: { gameId } })
+      } else if (navigateTo === 'studio') {
+        await navigate({
+          to: '/games/$gameId/versions/$versionId/reel-studio',
+          params: { gameId, versionId: result.id },
+        })
       } else {
         await navigate({
           to: '/games/$gameId/versions/$versionId',

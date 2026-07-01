@@ -176,6 +176,22 @@ def get_collaboration_service(
     return CollaborationService.from_session(session)
 
 
+def get_contact_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> ContactService:
+    from app.services.contact_service import ContactService
+
+    return ContactService.from_session(session)
+
+
+def get_demo_service(
+    session: AsyncSession = Depends(get_db_session),
+) -> DemoService:
+    from app.services.demo_service import DemoService
+
+    return DemoService.from_session(session)
+
+
 def get_monitoring_service(
     request: Request,
 ) -> MonitoringService:

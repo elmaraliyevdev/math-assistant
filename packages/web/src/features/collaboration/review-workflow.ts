@@ -1,5 +1,5 @@
 import type { OrganizationRole } from '@/types/api'
-import type { SimulationApproval, SimulationWorkflow } from '@/features/collaboration/api/collaboration-api'
+import type { SimulationApproval, SimulationWorkflow } from '@/features/collaboration/types'
 import {
   canApproveReview,
   canRecordApproval,

@@ -116,5 +116,6 @@ def _to_result(
         win_by_rtp_category_minor_units=dict(aggregated.win_by_rtp_category_minor_units),
         nested_feature_entries=aggregated.nested_feature_entries,
         event_sample_count=aggregated.event_sample_count,
+        intelligence_snapshot=aggregated.intelligence_snapshot,
         engine_version=engine_version or ENGINE_VERSION,
     )

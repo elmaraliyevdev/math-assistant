@@ -4,16 +4,25 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "sync:brand": "node scripts/sync-brand-assets.mjs",
+    "dev": "npm run sync:brand && vite",
+    "build": "npm run sync:brand && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:reel-studio": "vitest run --config vitest.reel-studio.config.ts --coverage tests/reel-studio",
+    "test:coverage:constraints": "vitest run --config vitest.constraints.config.ts --coverage tests/reel-studio-constraints",
+    "test:coverage:generator": "vitest run --config vitest.generator.config.ts --coverage tests/reel-studio-generator",
+    "test:coverage:optimizer": "vitest run --config vitest.optimizer.config.ts --coverage tests/reel-studio-optimizer"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^5.4.0",
+    "@radix-ui/react-accordion": "^1.2.14",
     "@radix-ui/react-avatar": "^1.1.12",
     "@radix-ui/react-dialog": "^1.1.16",
     "@radix-ui/react-dropdown-menu": "^2.1.17",

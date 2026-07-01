@@ -41,10 +41,12 @@ export function useSimulationQueue() {
   })
 }
 
-export function useWorkers() {
+export function useWorkers(enabled = true) {
   return useQuery({
     queryKey: distributedKeys.workers,
     queryFn: distributedApi.listWorkers,
+    enabled,
     refetchInterval: 15_000,
+    retry: false,
   })
 }

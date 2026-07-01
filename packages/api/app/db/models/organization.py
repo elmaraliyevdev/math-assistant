@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String
+from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -20,6 +20,7 @@ class Organization(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    is_demo: Mapped[bool] = mapped_column(nullable=False, default=False)
 
     members: Mapped[list[OrganizationMember]] = relationship(
         back_populates="organization",

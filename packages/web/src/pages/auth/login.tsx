@@ -3,6 +3,8 @@ import { Link } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { AuthLayout } from '@/components/public/AuthLayout'
+import { PageMeta } from '@/components/seo/PageMeta'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -11,8 +13,9 @@ import { useLogin } from '@/features/auth/use-auth'
 import { getErrorMessage } from '@/services/api'
 
 const loginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
+  email: z.email('Enter a valid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  rememberMe: z.boolean(),
 })
 
 type LoginForm = z.infer<typeof loginSchema>
@@ -25,10 +28,12 @@ export function LoginPage() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: { rememberMe: false },
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <AuthLayout>
+      <PageMeta title="Sign In" path="/login" noIndex />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
@@ -40,20 +45,42 @@ export function LoginPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" {...register('email')} />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+              />
               {errors.email && (
                 <p className="text-sm text-destructive">{errors.email.message}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" {...register('password')} />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                {...register('password')}
+              />
               {errors.password && (
                 <p className="text-sm text-destructive">
                   {errors.password.message}
                 </p>
               )}
             </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" {...register('rememberMe')} />
+              Remember me
+            </label>
             {login.isError && (
               <p className="text-sm text-destructive">
                 {getErrorMessage(login.error)}
@@ -71,6 +98,6 @@ export function LoginPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AuthLayout>
   )
 }

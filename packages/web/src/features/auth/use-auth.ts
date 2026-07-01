@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 
+import { identifyUser, resetAnalytics, trackEvent } from '@/lib/analytics'
 import { authService } from '@/services/auth'
 import { isOnboardingCompleted } from '@/features/onboarding/storage'
 import { useAuthStore } from '@/stores/auth-store'
@@ -24,9 +25,11 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: authService.login,
-    onSuccess: async () => {
+    onSuccess: async (data, variables) => {
+      identifyUser(data.accessToken ? 'authenticated' : 'user')
       await queryClient.invalidateQueries({ queryKey: authKeys.me })
       await navigate({ to: '/dashboard' })
+      void variables
     },
   })
 }
@@ -38,6 +41,8 @@ export function useRegister() {
   return useMutation({
     mutationFn: authService.register,
     onSuccess: async (data) => {
+      trackEvent('signup')
+      identifyUser(data.user.id, { email: data.user.email })
       useOrganizationStore.getState().setCurrentOrganizationId(data.organizationId)
       await queryClient.invalidateQueries({ queryKey: authKeys.me })
       await navigate({
@@ -54,10 +59,39 @@ export function useLogout() {
   return useMutation({
     mutationFn: authService.logout,
     onSuccess: async () => {
+      resetAnalytics()
       useOrganizationStore.getState().clear()
       queryClient.clear()
       await navigate({ to: '/login' })
     },
+  })
+}
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: authService.forgotPassword,
+  })
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: authService.resetPassword,
+  })
+}
+
+export function useVerifyEmail() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: authService.verifyEmail,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: authKeys.me })
+    },
+  })
+}
+
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: authService.resendVerification,
   })
 }
 

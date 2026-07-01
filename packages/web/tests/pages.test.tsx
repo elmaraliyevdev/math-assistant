@@ -29,7 +29,7 @@ describe('protected pages', () => {
 
   it('renders templates page', async () => {
     await renderAt('/templates')
-    await expectHeading(/game templates/i)
+    await expectHeading(/templates/i)
     expect(await screen.findByText(/simple 5×3 slot/i)).toBeInTheDocument()
   })
 
@@ -45,18 +45,20 @@ describe('protected pages', () => {
     expect(await screen.findByText(/25.0%/i)).toBeInTheDocument()
   })
 
-  it('renders organization settings', async () => {
-    await renderAt('/organizations/settings')
-    expect(
-      await screen.findByText(/invite teammates, manage roles, and switch workspaces/i),
-    ).toBeInTheDocument()
-    expect(await screen.findByText(/workspace/i)).toBeInTheDocument()
+  it('renders organization settings via settings team section', async () => {
+    await renderAt('/settings?section=team')
+    expect(await screen.findByText(/manage members, roles, and pending invitations/i)).toBeInTheDocument()
   })
 
-  it('renders audit log page', async () => {
+  it('renders audit log via settings audit section', async () => {
+    await renderAt('/settings?section=audit')
+    await expectHeading(/audit log/i)
+    expect(await screen.findByText(/test user/i)).toBeInTheDocument()
+  })
+
+  it('redirects legacy audit route to settings', async () => {
     await renderAt('/audit')
     await expectHeading(/audit log/i)
-    expect(await screen.findByText(/auth\.login/i)).toBeInTheDocument()
   })
 
   it('renders settings page', async () => {

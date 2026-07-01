@@ -2,9 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <script>
+      (function () {
+        var stored = localStorage.getItem('ma_theme')
+        var dark =
+          stored === 'dark' ||
+          (stored !== 'light' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.documentElement.classList.add('dark')
+      })()
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/white-logo-icon.svg" />
+    <link rel="apple-touch-icon" href="/white-logo-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Math Assistant</title>
+    <title>MathStudio</title>
   </head>
   <body>
     <div id="root"></div>

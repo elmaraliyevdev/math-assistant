@@ -1,0 +1,421 @@
+/**
+ * Marketing demo crops — premium SaaS presentation, not application screenshots.
+ */
+.demo-spotlight {
+  --demo-spotlight-radius: 1.125rem;
+  --demo-spotlight-min-height: 18.5rem;
+  --demo-spotlight-padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--demo-spotlight-radius);
+  border: 1px solid color-mix(in oklch, var(--border) 55%, transparent);
+  background: color-mix(in oklch, var(--card) 40%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--foreground) 4%, transparent),
+    0 24px 48px -24px color-mix(in oklch, var(--background) 80%, transparent);
+}
+
+.demo-spotlight-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 90% 70% at 50% -10%,
+      color-mix(in oklch, var(--primary) 10%, transparent),
+      transparent 65%
+    );
+}
+
+.demo-spotlight-inner {
+  position: relative;
+  min-height: var(--demo-spotlight-min-height);
+  padding: var(--demo-spotlight-padding);
+}
+
+.demo-spotlight-crop {
+  overflow: hidden;
+}
+
+/* ── Shared preview shell ── */
+
+.demo-preview-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 15.5rem;
+}
+
+.demo-preview-feature {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Reel Studio ── */
+
+.demo-reel-preview {
+  position: relative;
+}
+
+.demo-reel-preview__badges {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.375rem;
+}
+
+.demo-preview-badge {
+  border-color: transparent;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.demo-reel-compose {
+  display: grid;
+  grid-template-columns: minmax(6.5rem, 16%) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  padding-top: 0.25rem;
+}
+
+.demo-reel-compose__palette-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.demo-reel-compose__palette {
+  opacity: 0.92;
+}
+
+.demo-reel-compose__palette [class*='text-sm'] {
+  font-size: 0.75rem;
+}
+
+.demo-reel-compose__palette button {
+  padding: 0.5rem 0.625rem;
+}
+
+.demo-reel-compose__canvas {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+}
+
+.demo-reel-compose__canvas .flex.items-start {
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.demo-reel-motion-ghost {
+  pointer-events: none;
+  position: absolute;
+  left: 8%;
+  top: 42%;
+  z-index: 3;
+  width: 2.75rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid color-mix(in oklch, var(--primary) 50%, transparent);
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  opacity: 0;
+  animation: demo-symbol-drop 4.5s ease-in-out infinite;
+}
+
+/* ── Simulation ── */
+
+.demo-simulation-preview {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 22rem;
+  margin: 0 auto;
+  padding: 0.5rem 0.25rem 0.25rem;
+}
+
+.demo-simulation-preview__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.demo-simulation-preview__percent {
+  margin: 0;
+  font-size: 3.25rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.demo-simulation-preview__track {
+  height: 0.625rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: color-mix(in oklch, var(--muted) 65%, transparent);
+}
+
+.demo-simulation-preview__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--primary) 85%, transparent),
+    var(--primary)
+  );
+  transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.demo-simulation-preview__spins {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.demo-simulation-preview__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.demo-simulation-preview__metrics dt {
+  margin: 0;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.demo-simulation-preview__metrics dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Mathematics ── */
+
+.demo-math-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 1.5rem;
+  align-items: center;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.demo-math-hero-gauge__svg {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  height: auto;
+  margin: 0 auto;
+}
+
+.demo-math-hero-gauge__arc {
+  transition: stroke-dasharray 0.35s ease-out;
+}
+
+.demo-math-hero-gauge__needle {
+  transition: x2 0.35s ease-out, y2 0.35s ease-out;
+}
+
+.demo-math-hero-gauge__label {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.demo-math-hero-gauge__value {
+  margin: 0.25rem 0 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.demo-math-preview__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.demo-math-preview__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.demo-math-preview__stat-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.demo-math-preview__stat-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* ── Certification ── */
+
+.demo-cert-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0.25rem 0;
+}
+
+.demo-cert-preview__workflow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.demo-cert-preview__workflow [class*='Badge'] {
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+.demo-cert-preview__chip--current {
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 35%, transparent);
+}
+
+.demo-cert-preview__reviewers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.demo-cert-preview__reviewer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklch, var(--muted) 35%, transparent);
+  font-size: 0.8125rem;
+}
+
+.demo-cert-preview__reviewer--done {
+  opacity: 0.85;
+}
+
+.demo-cert-preview__reviewer-name {
+  font-weight: 500;
+}
+
+.demo-cert-preview__reviewer-status {
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+}
+
+.demo-cert-preview__audit {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+  padding-top: 0.875rem;
+}
+
+.demo-cert-preview__audit li {
+  padding: 0.375rem 0;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  text-transform: capitalize;
+}
+
+/* ── Motion ── */
+
+.demo-animate-pass {
+  animation: demo-pass-in 0.6s ease-out both;
+  animation-delay: 1.8s;
+}
+
+.demo-animate-approval-pulse {
+  animation: demo-approval-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes demo-symbol-drop {
+  0%,
+  12% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.85);
+  }
+  22% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  55% {
+    opacity: 1;
+    transform: translate(14rem, -1.5rem) scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: translate(14rem, -1.5rem) scale(0.9);
+  }
+}
+
+@keyframes demo-pass-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes demo-approval-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 30%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-spotlight-glow,
+  .demo-reel-motion-ghost,
+  .demo-animate-pass,
+  .demo-animate-approval-pulse {
+    animation: none !important;
+  }
+
+  .demo-simulation-preview__fill,
+  .demo-math-hero-gauge__arc,
+  .demo-math-hero-gauge__needle {
+    transition: none;
+  }
+}

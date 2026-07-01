@@ -153,6 +153,10 @@ class SessionExecutor:
 
                 win_result = apply_step_wins(session, wins)
                 metrics.record_wins(frame.rtp_category, wins)
+                metrics.record_win_symbols(wins)
+                grid = result.grid_outcome
+                if isinstance(grid, dict) and isinstance(grid.get("symbols"), list):
+                    metrics.record_grid(frame.rtp_category, grid["symbols"])
                 if wins:
                     _emit_win_evaluated(session, stack, frame, wins)
                 if win_result.cap_applied:

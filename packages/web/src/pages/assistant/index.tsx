@@ -2,13 +2,7 @@ import { AssistantChat } from '@/features/assistant/components/AssistantChat'
 
 export function AssistantPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Mathematics Assistant</h1>
-        <p className="text-sm text-muted-foreground">
-          Artifact-grounded explanations and tuning guidance for simulations and game versions.
-        </p>
-      </div>
+    <div className="-m-4 flex h-[calc(100dvh-3.5rem)] min-h-[32rem] flex-col overflow-hidden md:-m-6">
       <AssistantChat />
     </div>
   )

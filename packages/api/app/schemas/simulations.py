@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -270,6 +272,10 @@ class SimulationResultsResponse(BaseModel):
     engine_version: str = Field(alias="engineVersion")
     game_version_content_hash: str = Field(alias="gameVersionContentHash")
     certification_notice: str = Field(alias="certificationNotice")
+    simulation_intelligence: dict[str, Any] | None = Field(
+        default=None,
+        alias="simulationIntelligence",
+    )
 
 
 class SimulationCompareEntry(BaseModel):

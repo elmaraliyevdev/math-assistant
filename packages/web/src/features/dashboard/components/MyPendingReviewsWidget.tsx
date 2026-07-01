@@ -56,7 +56,9 @@ export function MyPendingReviewsWidget({
                 </>
               ) : (
                 <Button size="sm" variant="outline" asChild>
-                  <Link to="/organizations/settings">Organization settings</Link>
+                  <Link to="/settings" search={{ section: 'team' }}>
+                    Team settings
+                  </Link>
                 </Button>
               )
             }

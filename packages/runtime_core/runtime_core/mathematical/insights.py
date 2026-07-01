@@ -18,7 +18,7 @@ def enrich_mathematics_report(
     result: SimulationResult,
     feature_frequency_tolerance: float = 0.05,
 ) -> MathematicsReport:
-    """Attach RTP validation, decomposition chart, and recommendations."""
+    """Attach RTP validation, decomposition chart, recommendations, and intelligence."""
     rtp_validation = validate_rtp_target(result, game, actual_rtp_ratio=report.rtp.rtp)
     chart = build_rtp_decomposition_chart(result, game)
     feature_validation = validate_feature_frequencies(
@@ -31,11 +31,21 @@ def enrich_mathematics_report(
         game,
         rtp_validation=rtp_validation,
     )
-    return report.model_copy(
+    enriched_report = report.model_copy(
         update={
             "rtp_validation": rtp_validation,
             "rtp_decomposition_chart": chart,
             "feature_validation": feature_validation,
             "recommendations": recommendations,
         },
+    )
+    from runtime_core.intelligence.report import build_simulation_intelligence_report
+
+    intelligence = build_simulation_intelligence_report(
+        result=result,
+        report=enriched_report,
+        game=game,
+    )
+    return enriched_report.model_copy(
+        update={"simulation_intelligence": intelligence},
     )

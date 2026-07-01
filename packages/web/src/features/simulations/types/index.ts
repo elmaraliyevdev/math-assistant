@@ -31,6 +31,7 @@ export interface SimulationTableRow extends SimulationSummary {
   versionNumber: number | null
   organizationName: string
   rtp: number | null
+  rtpDeviation: number | null
   totalBetMinorUnits: number | null
   totalWinMinorUnits: number | null
 }

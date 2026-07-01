@@ -1,0 +1,22 @@
+{
+  "name": "@math-assistant/brand",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Canonical MathStudio branding assets and Logo component",
+  "exports": {
+    ".": "./src/index.ts",
+    "./assets/*": "./assets/*"
+  },
+  "scripts": {
+    "sync": "node scripts/sync-assets.mjs"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "react": "^19.2.0",
+    "typescript": "^5"
+  }
+}

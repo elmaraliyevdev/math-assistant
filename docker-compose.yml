@@ -1,12 +1,15 @@
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: math_assistant
+    # Host port 5433 avoids conflict with a local PostgreSQL on 5432.
+    # Containers reach postgres via the service name on the internal network.
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,6 +33,7 @@ services:
     build:
       context: .
       dockerfile: packages/api/Dockerfile
+    restart: unless-stopped
     environment:
       API_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/math_assistant
       API_JWT_SECRET_KEY: change-me-in-production-use-32-bytes-min
@@ -73,6 +77,7 @@ services:
     build:
       context: .
       dockerfile: packages/web/Dockerfile
+    restart: unless-stopped
     ports:
       - "5173:80"
     depends_on:

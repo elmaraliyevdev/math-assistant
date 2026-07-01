@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from runtime_core.intelligence.models import IntelligenceSnapshot
 from runtime_core.runtime.events import EventLogMode
 from runtime_core.runtime.version import ENGINE_VERSION
 
@@ -70,4 +71,8 @@ class SimulationResult(BaseModel):
     )
     nested_feature_entries: int = Field(default=0, alias="nestedFeatureEntries")
     event_sample_count: int = Field(alias="eventSampleCount")
+    intelligence_snapshot: IntelligenceSnapshot = Field(
+        default_factory=IntelligenceSnapshot.empty,
+        alias="intelligenceSnapshot",
+    )
     engine_version: str = Field(alias="engineVersion")

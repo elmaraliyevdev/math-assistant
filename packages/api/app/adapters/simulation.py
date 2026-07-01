@@ -187,5 +187,6 @@ def _to_engine_result(
         winByRtpCategoryMinorUnits=dict(aggregated.win_by_rtp_category_minor_units),
         nestedFeatureEntries=aggregated.nested_feature_entries,
         eventSampleCount=aggregated.event_sample_count,
+        intelligenceSnapshot=aggregated.intelligence_snapshot.model_dump(mode="json", by_alias=True),
         engineVersion=engine_version,
     )

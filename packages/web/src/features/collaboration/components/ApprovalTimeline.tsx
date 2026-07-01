@@ -1,7 +1,7 @@
 import { Badge, statusBadgeVariant } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDate } from '@/lib/utils'
-import type { SimulationApproval } from '@/features/collaboration/api/collaboration-api'
+import type { SimulationApproval } from '@/features/collaboration/types'
 
 const STAGE_LABELS: Record<string, string> = {
   mathematician: 'Mathematician',

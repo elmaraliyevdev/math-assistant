@@ -5,6 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from runtime_core.intelligence.collector import IntelligenceCollector
+from runtime_core.intelligence.models import IntelligenceSnapshot
+
 _NON_FEATURE_TRIGGER_TOKENS = frozenset({"SPIN_COMPLETE", "FEATURE_COMPLETE"})
 
 
@@ -17,6 +20,13 @@ class ChainMetricsCollector:
     jackpot_counts: dict[str, int] = field(default_factory=dict)
     nested_feature_entries: int = 0
     trace_steps: list[dict[str, Any]] = field(default_factory=list)
+    intelligence: IntelligenceCollector = field(default_factory=IntelligenceCollector)
+
+    def record_grid(self, rtp_category: str, symbols: list[list[str]]) -> None:
+        self.intelligence.record_grid(rtp_category, symbols)
+
+    def record_win_symbols(self, wins: list[dict[str, Any]]) -> None:
+        self.intelligence.record_wins(wins)
 
     def record_trigger_tokens(self, tokens: list[str]) -> None:
         for token in tokens:
@@ -51,6 +61,7 @@ class ChainMetricsCollector:
             jackpot_counts=dict(self.jackpot_counts),
             nested_feature_entries=self.nested_feature_entries,
             trace_steps=tuple(self.trace_steps),
+            intelligence_snapshot=self.intelligence.freeze(),
         )
 
 
@@ -63,6 +74,7 @@ class ChainMetrics:
     jackpot_counts: dict[str, int]
     nested_feature_entries: int
     trace_steps: tuple[dict[str, Any], ...] = ()
+    intelligence_snapshot: IntelligenceSnapshot = IntelligenceSnapshot.empty()
 
     @classmethod
     def empty(cls) -> ChainMetrics:
@@ -72,4 +84,5 @@ class ChainMetrics:
             jackpot_counts={},
             nested_feature_entries=0,
             trace_steps=(),
+            intelligence_snapshot=IntelligenceSnapshot.empty(),
         )

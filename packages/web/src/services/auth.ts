@@ -10,6 +10,7 @@ import type {
 export interface LoginInput {
   email: string
   password: string
+  rememberMe?: boolean
 }
 
 export interface RegisterInput {
@@ -18,9 +19,9 @@ export interface RegisterInput {
   fullName: string
 }
 
-function applyTokens(tokens: TokenResponse) {
+function applyTokens(tokens: TokenResponse, rememberMe = false) {
   useAuthStore.getState().setAccessToken(tokens.accessToken)
-  refreshTokenStorage.set(tokens.refreshToken)
+  refreshTokenStorage.set(tokens.refreshToken, rememberMe)
 }
 
 export const authService = {
@@ -31,8 +32,12 @@ export const authService = {
   },
 
   async login(input: LoginInput): Promise<TokenResponse> {
-    const { data } = await api.post<TokenResponse>('/auth/login', input)
-    applyTokens(data)
+    const { data } = await api.post<TokenResponse>('/auth/login', {
+      email: input.email,
+      password: input.password,
+      rememberMe: input.rememberMe ?? false,
+    })
+    applyTokens(data, input.rememberMe)
     return data
   },
 
@@ -63,6 +68,24 @@ export const authService = {
 
   async me(): Promise<MeResponse> {
     const { data } = await api.get<MeResponse>('/auth/me')
+    return data
+  },
+
+  async forgotPassword(input: { email: string }): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/forgot-password', input)
+    return data
+  },
+
+  async resetPassword(input: { token: string; password: string }): Promise<void> {
+    await api.post('/auth/reset-password', input)
+  },
+
+  async verifyEmail(input: { token: string }): Promise<void> {
+    await api.post('/auth/verify-email', input)
+  },
+
+  async resendVerification(): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/resend-verification')
     return data
   },
 }

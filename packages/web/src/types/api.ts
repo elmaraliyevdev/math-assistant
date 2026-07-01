@@ -3,6 +3,7 @@ export interface User {
   email: string
   fullName: string
   isActive: boolean
+  emailVerified?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -278,6 +279,55 @@ export interface SimulationResults {
   engineVersion: string
   gameVersionContentHash: string
   certificationNotice: string
+  simulationIntelligence?: SimulationIntelligenceReport | null
+}
+
+export interface SimulationIntelligenceReport {
+  overview: string
+  whyRtpDiffers: string[]
+  symbolProfiles: Array<{
+    symbolId: string
+    occurrences: number
+    expectedOccurrences: number
+    differencePercent: number
+    rtpContributionPercent: number
+    health: string
+    topNeighbours: string[]
+  }>
+  designVsReality: Array<{
+    metricId: string
+    label: string
+    target: string
+    observed: string
+    status: string
+    confidence: { score: number; label: string; basis: string }
+  }>
+  recommendations: Array<{
+    id: string
+    title: string
+    reason: string
+    recommendation: string
+    confidence: { score: number; label: string; basis: string }
+    expectedImprovement: string
+    potentialRtpInfluence: string
+  }>
+  contributionSlices: Array<{ id: string; label: string; rtpPercent: number }>
+  reelReports: Array<{
+    reelIndex: number
+    length: number
+    entropy: number
+    health: string
+    rank: number
+  }>
+  heatmaps: Array<{ id: string; label: string; mode: string; cells: Record<string, number> }>
+  metricExplanations: Array<{
+    metricId: string
+    label: string
+    observed: string
+    explanation: string
+    confidence: { score: number; label: string; basis: string }
+  }>
+  spinCount: number
 }
 
 export interface SimulationNote {

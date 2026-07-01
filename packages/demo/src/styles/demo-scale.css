@@ -1,0 +1,24 @@
+/**
+ * Uniform demo scaling — same composition, smaller on narrow viewports.
+ */
+.demo-scale-root {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.demo-scale-align {
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.demo-scale-canvas {
+  transform-origin: top left;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-scale-canvas {
+    will-change: auto;
+  }
+}

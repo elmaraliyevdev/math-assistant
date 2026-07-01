@@ -21,6 +21,7 @@ class LoginRequest(BaseModel):
 
     email: EmailStr
     password: str
+    remember_me: bool = Field(default=False, alias="rememberMe")
 
 
 class RefreshRequest(BaseModel):
@@ -51,6 +52,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     full_name: str = Field(alias="fullName")
     is_active: bool = Field(alias="isActive")
+    email_verified: bool = Field(alias="emailVerified", default=False)
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
 
@@ -77,3 +79,34 @@ class OrganizationMembershipResponse(BaseModel):
     organization_name: str = Field(alias="organizationName")
     organization_slug: str = Field(alias="organizationSlug")
     role: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    message: str
+
+
+class ResetPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    token: str = Field(min_length=32)
+    password: str = Field(min_length=8)
+
+
+class VerifyEmailRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    token: str = Field(min_length=32)
+
+
+class ResendVerificationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    message: str

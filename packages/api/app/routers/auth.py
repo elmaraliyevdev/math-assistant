@@ -14,13 +14,18 @@ from app.auth.security_deps import (
 from app.config import Settings
 from app.dependencies import get_audit_service, get_auth_service, get_settings
 from app.schemas.auth import (
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     LoginRequest,
     LogoutRequest,
     MeResponse,
     RefreshRequest,
     RegisterRequest,
     RegisterResponse,
+    ResendVerificationResponse,
+    ResetPasswordRequest,
     TokenResponse,
+    VerifyEmailRequest,
 )
 from app.services.auth_service import AuthService
 from app.services.audit_service import AuditService
@@ -52,7 +57,7 @@ async def login(
     auth_service: AuthService = Depends(get_auth_service),
     audit_service: AuditService = Depends(get_audit_service),
 ) -> TokenResponse:
-    tokens = await auth_service.login(body, client_ip=client_ip)
+    tokens = await auth_service.login(body, client_ip=client_ip, remember_me=body.remember_me)
     user = await auth_service.users.get_by_email(body.email.strip().lower())
     if user is not None:
         await audit_service.record(
@@ -110,3 +115,51 @@ async def get_me(
     user=Depends(get_current_user),
 ) -> MeResponse:
     return await auth_service.get_me(user)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=ForgotPasswordResponse,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
+async def forgot_password(
+    body: ForgotPasswordRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> ForgotPasswordResponse:
+    return await auth_service.forgot_password(body.email)
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
+async def reset_password(
+    body: ResetPasswordRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    await auth_service.reset_password(body.token, body.password)
+
+
+@router.post(
+    "/verify-email",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
+async def verify_email(
+    body: VerifyEmailRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    await auth_service.verify_email(body.token)
+
+
+@router.post(
+    "/resend-verification",
+    response_model=ResendVerificationResponse,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
+async def resend_verification(
+    auth_service: AuthService = Depends(get_auth_service),
+    user=Depends(get_current_user),
+) -> ResendVerificationResponse:
+    return await auth_service.resend_verification(user)

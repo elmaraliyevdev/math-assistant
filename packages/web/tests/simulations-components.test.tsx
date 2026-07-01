@@ -25,9 +25,7 @@ import { certifiedSimulationResults as results } from './fixtures/certified-resu
 
 describe('simulation components', () => {
   it('renders simulation table loading state', () => {
-    const { container } = render(
-      <SimulationTable rows={[]} loading onCancel={() => undefined} />,
-    )
+    const { container } = render(<SimulationTable rows={[]} loading />)
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0)
   })
 
@@ -48,7 +46,7 @@ describe('simulation components', () => {
 
   it('renders empty and error states', () => {
     const { rerender } = render(<SimulationTableEmpty hasFilters />)
-    expect(screen.getByText(/no simulations found/i)).toBeInTheDocument()
+    expect(screen.getByText(/no results/i)).toBeInTheDocument()
 
     rerender(<SimulationTableError message="Network error" />)
     expect(screen.getByText(/failed to load simulations/i)).toBeInTheDocument()

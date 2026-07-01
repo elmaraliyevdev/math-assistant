@@ -1,0 +1,65 @@
+/**
+ * Demo frame sizing — uses application design tokens from packages/web.
+ * Import web index.css on the landing app root for token parity.
+ */
+.demo-frame {
+  --demo-viewport-height: 36.25rem;
+  --demo-content-scale: 0.76;
+}
+
+@media (min-width: 1280px) {
+  .demo-frame {
+    --demo-viewport-height: 36.25rem;
+    --demo-content-scale: 0.78;
+  }
+}
+
+@media (max-width: 1023px) {
+  .demo-frame {
+    --demo-viewport-height: 32rem;
+    --demo-content-scale: 0.72;
+  }
+}
+
+.demo-frame-shell {
+  height: calc(var(--demo-viewport-height) + 3rem + 3rem);
+  min-height: 28rem;
+}
+
+.demo-frame .demo-viewport {
+  height: 100%;
+  min-height: var(--demo-viewport-height);
+}
+
+.demo-frame .demo-viewport-content {
+  padding: 0;
+}
+
+.demo-frame .demo-calibration {
+  font-size: 0.8125rem;
+}
+
+.demo-frame .demo-calibration .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.625rem;
+}
+
+.demo-frame .demo-calibration .h-28 {
+  height: 3.25rem;
+}
+
+.demo-frame .demo-calibration .text-lg {
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+}
+
+.demo-frame .demo-calibration .gap-6 {
+  gap: 0.625rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-frame .demo-viewport-content {
+    transform: none;
+    width: 100%;
+    min-height: 100%;
+  }
+}

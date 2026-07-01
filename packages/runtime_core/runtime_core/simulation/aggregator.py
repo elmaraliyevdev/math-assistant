@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from runtime_core.runtime.events import EventType
+from runtime_core.intelligence.models import IntelligenceSnapshot
 from runtime_core.runtime.spin_chain import SpinChainResult
 
 
@@ -32,6 +32,7 @@ class PartialAccumulator:
     win_by_rtp_category_minor_units: dict[str, int] = field(default_factory=dict)
     nested_feature_entries: int = 0
     event_sample_count: int = 0
+    intelligence_snapshot: IntelligenceSnapshot = field(default_factory=IntelligenceSnapshot.empty)
 
     @classmethod
     def empty(cls) -> PartialAccumulator:
@@ -64,6 +65,7 @@ class PartialAccumulator:
             ),
             nested_feature_entries=self.nested_feature_entries + other.nested_feature_entries,
             event_sample_count=self.event_sample_count + other.event_sample_count,
+            intelligence_snapshot=self.intelligence_snapshot.merge(other.intelligence_snapshot),
         )
 
     def add_chain(self, result: SpinChainResult, *, events_sampled: bool) -> PartialAccumulator:
@@ -91,6 +93,7 @@ class PartialAccumulator:
             win_by_rtp_category_minor_units=dict(self.win_by_rtp_category_minor_units),
             nested_feature_entries=self.nested_feature_entries,
             event_sample_count=self.event_sample_count + (1 if events_sampled else 0),
+            intelligence_snapshot=self.intelligence_snapshot,
         )
         updated.feature_trigger_counts = _merge_counts(
             updated.feature_trigger_counts,
@@ -105,6 +108,9 @@ class PartialAccumulator:
             dict(result.chain_metrics.win_by_rtp_category_minor_units),
         )
         updated.nested_feature_entries += result.chain_metrics.nested_feature_entries
+        updated.intelligence_snapshot = updated.intelligence_snapshot.merge(
+            result.chain_metrics.intelligence_snapshot,
+        )
         if result.fault is not None:
             updated.chain_fault_count += 1
         return updated

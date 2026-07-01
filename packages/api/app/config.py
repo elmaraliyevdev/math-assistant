@@ -117,6 +117,18 @@ class Settings(BaseSettings):
         default=None,
         description="Optional bearer token required for GET /metrics",
     )
+    frontend_url: str = Field(
+        default="http://localhost:5173",
+        description="Public frontend URL for email links",
+    )
+    platform_admin_emails: str = Field(
+        default="",
+        description="Comma-separated admin emails for contact submission review",
+    )
+    smtp_enabled: bool = Field(
+        default=False,
+        description="Enable outbound email (password reset, verification)",
+    )
 
     @property
     def resolved_celery_broker_url(self) -> str:

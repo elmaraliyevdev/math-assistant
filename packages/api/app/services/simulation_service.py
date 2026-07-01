@@ -276,6 +276,11 @@ def _to_results_response(
         engine_version=report.engine_version,
         game_version_content_hash=game_version_content_hash,
         certification_notice=CERTIFICATION_NOTICE,
+        simulation_intelligence=(
+            report.simulation_intelligence.model_dump(by_alias=True)
+            if report.simulation_intelligence is not None
+            else None
+        ),
     )
 
 

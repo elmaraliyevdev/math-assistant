@@ -91,7 +91,7 @@ describe('TemplateDownloadCard', () => {
 describe('templates page', () => {
   it('renders all template cards', async () => {
     await renderAt('/templates')
-    await expectHeading(/game templates/i)
+    await expectHeading(/templates/i)
     expect(await screen.findByText(/simple 5×3 slot/i)).toBeInTheDocument()
     expect(screen.getByText(/free spins slot/i)).toBeInTheDocument()
     expect(screen.getByText(/hold and win slot/i)).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe('templates page', () => {
     const user = userEvent.setup()
     await renderAt('/templates')
     const downloadButtons = await screen.findAllByRole('button', {
-      name: /download json/i,
+      name: /^download$/i,
     })
     await user.click(downloadButtons[0]!)
     expect(downloadBlob).toHaveBeenCalled()
@@ -126,7 +126,7 @@ describe('templates page', () => {
     )
 
     const { history } = await renderAt('/templates')
-    await user.click(screen.getAllByRole('button', { name: /use template/i })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^use$/i })[0]!)
 
     const dialog = await screen.findByRole('dialog')
     expect(dialog).toBeInTheDocument()
@@ -336,7 +336,7 @@ describe('UseTemplateDialog via templates page', () => {
   it('requires game selection before upload', async () => {
     const user = userEvent.setup()
     await renderAt('/templates')
-    await user.click(screen.getAllByRole('button', { name: /use template/i })[0]!)
+    await user.click(screen.getAllByRole('button', { name: /^use$/i })[0]!)
 
     expect(screen.getByRole('button', { name: /upload template/i })).toBeDisabled()
     await user.click(screen.getByRole('combobox'))

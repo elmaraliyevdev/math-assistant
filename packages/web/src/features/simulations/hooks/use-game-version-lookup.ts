@@ -20,11 +20,18 @@ export function useGameVersionBySimulation(gameVersionId: string | undefined) {
     for (const [index, game] of (games.data?.items ?? []).entries()) {
       const versions = versionQueries[index]?.data ?? []
       if (versions.some((version) => version.id === gameVersionId)) {
-        return { gameId: game.id, versionId: gameVersionId }
+        return { gameId: game.id, gameName: game.name, versionId: gameVersionId }
       }
     }
     return null
   }, [gameVersionId, games.data?.items, versionQueries])
 
-  return useGameVersion(lookup?.gameId ?? '', lookup?.versionId ?? '')
+  const versionQuery = useGameVersion(lookup?.gameId ?? '', lookup?.versionId ?? '')
+
+  return {
+    ...versionQuery,
+    gameId: lookup?.gameId,
+    gameName: lookup?.gameName,
+    versionNumber: versionQuery.data?.version ?? null,
+  }
 }

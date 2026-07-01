@@ -1,9 +1,8 @@
+import { useNavigate } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
-import { Ban, Eye } from 'lucide-react'
 
-import { Badge, statusBadgeVariant } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/empty-state'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
@@ -13,106 +12,85 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { RtpDeviationCell } from '@/features/simulations/components/RtpDeviationCell'
+import { SimulationStatusBadge } from '@/features/simulations/components/SimulationStatusBadge'
 import type { SimulationTableRow } from '@/features/simulations/types'
-import { formatDate, formatNumber, formatPercent } from '@/lib/utils'
+import { formatDurationMs } from '@/features/simulations/utils/workbench'
+import { simulationDurationMs } from '@/features/simulations/utils/health-score'
+import { cn, formatDate, formatNumber } from '@/lib/utils'
 
 interface SimulationTableProps {
   rows: SimulationTableRow[]
   loading?: boolean
-  onCancel: (row: SimulationTableRow) => void
-  cancellingId?: string | null
 }
 
-export function SimulationTable({
-  rows,
-  loading,
-  onCancel,
-  cancellingId,
-}: SimulationTableProps) {
+export function SimulationTable({ rows, loading }: SimulationTableProps) {
+  const navigate = useNavigate()
+
   if (loading) {
     return (
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <Skeleton key={index} className="h-12 w-full" />
+      <div className="space-y-2 rounded-xl border border-border/40 bg-card/30 p-2">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-14 w-full rounded-lg" />
         ))}
       </div>
     )
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="overflow-hidden rounded-xl border border-border/40">
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead>Simulation ID</TableHead>
-            <TableHead>Game</TableHead>
-            <TableHead>Version</TableHead>
-            <TableHead>Spins</TableHead>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Simulation</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>RTP</TableHead>
-            <TableHead>Total Bet</TableHead>
-            <TableHead>Total Win</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right">Spins</TableHead>
+            <TableHead>Observed RTP</TableHead>
+            <TableHead>Duration</TableHead>
+            <TableHead className="text-right">Created</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.map((row) => {
-            const canCancel =
-              row.status === 'pending' || row.status === 'running'
+            const duration = simulationDurationMs(row.createdAt, row.completedAt)
 
             return (
-              <TableRow key={row.id}>
-                <TableCell className="font-mono text-xs">
-                  {row.id.slice(0, 8)}…
-                </TableCell>
-                <TableCell className="font-medium">{row.gameName}</TableCell>
+              <TableRow
+                key={row.id}
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  'hover:bg-muted/50',
+                )}
+                onClick={() =>
+                  navigate({
+                    to: '/simulations/$simulationId',
+                    params: { simulationId: row.id },
+                  })
+                }
+              >
                 <TableCell>
-                  {row.versionNumber != null ? `v${row.versionNumber}` : '—'}
-                </TableCell>
-                <TableCell>{formatNumber(row.spinCount)}</TableCell>
-                <TableCell>
-                  <Badge variant={statusBadgeVariant(row.status)}>
-                    {row.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {row.rtp != null ? formatPercent(row.rtp) : '—'}
-                </TableCell>
-                <TableCell>
-                  {row.totalBetMinorUnits != null
-                    ? formatNumber(row.totalBetMinorUnits)
-                    : '—'}
-                </TableCell>
-                <TableCell>
-                  {row.totalWinMinorUnits != null
-                    ? formatNumber(row.totalWinMinorUnits)
-                    : '—'}
-                </TableCell>
-                <TableCell>{formatDate(row.createdAt)}</TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link
-                        to="/simulations/$simulationId"
-                        params={{ simulationId: row.id }}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span className="sr-only">View</span>
-                      </Link>
-                    </Button>
-                    {canCancel && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        disabled={cancellingId === row.id}
-                        onClick={() => onCancel(row)}
-                      >
-                        <Ban className="h-4 w-4 text-destructive" />
-                        <span className="sr-only">Cancel</span>
-                      </Button>
-                    )}
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{row.gameName}</p>
+                    <p className="truncate font-mono text-xs text-muted-foreground">
+                      {row.id.slice(0, 8)}…
+                      {row.versionNumber != null ? ` · v${row.versionNumber}` : ''}
+                    </p>
                   </div>
+                </TableCell>
+                <TableCell>
+                  <SimulationStatusBadge status={row.status} />
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {formatNumber(row.spinCount)}
+                </TableCell>
+                <TableCell>
+                  <RtpDeviationCell rtp={row.rtp} deviation={row.rtpDeviation} />
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {formatDurationMs(duration)}
+                </TableCell>
+                <TableCell className="text-right text-sm text-muted-foreground">
+                  {formatDate(row.createdAt)}
                 </TableCell>
               </TableRow>
             )
@@ -130,17 +108,17 @@ export function SimulationTableEmpty({
 }) {
   return (
     <EmptyState
-      title="No simulations found"
+      title={hasFilters ? 'No results' : 'No simulations yet'}
       description={
         hasFilters
-          ? 'Try adjusting your filters or search query.'
+          ? 'Try adjusting your search or filters.'
           : 'Run your first simulation to validate RTP, volatility, and feature balance.'
       }
       actions={
         !hasFilters ? (
           <>
             <Button asChild>
-              <Link to="/simulations/create">Create simulation</Link>
+              <Link to="/simulations/create">New simulation</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/games">View games</Link>
@@ -154,7 +132,7 @@ export function SimulationTableEmpty({
 
 export function SimulationTableError({ message }: { message: string }) {
   return (
-    <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-6 text-center">
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-8 text-center">
       <p className="font-medium text-destructive">Failed to load simulations</p>
       <p className="mt-1 text-sm text-muted-foreground">{message}</p>
     </div>

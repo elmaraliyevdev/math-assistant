@@ -21,7 +21,7 @@ const citations: GroundedCitation[] = [
 describe('Assistant components', () => {
   it('renders grounded citations', () => {
     render(<CitationPanel citations={citations} />)
-    expect(screen.getByText('Grounded citations')).toBeInTheDocument()
+    expect(screen.getByText('Citations')).toBeInTheDocument()
     expect(screen.getByText('Simulation #123')).toBeInTheDocument()
     expect(
       screen.getByText(

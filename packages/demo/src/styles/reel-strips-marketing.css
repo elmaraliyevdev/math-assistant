@@ -1,0 +1,207 @@
+/**
+ * Reel studio section — horizontal strips + distribution (distinct from hero grid).
+ */
+.strip-marketing {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.strip-marketing__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.strip-marketing__caption {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.strip-marketing__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.strip-marketing__badge {
+  border-color: transparent;
+  font-size: 0.625rem;
+  font-weight: 600;
+}
+
+.strip-marketing__badge--pop {
+  animation: strip-badge-pop 0.45s ease-out;
+}
+
+.strip-marketing__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7.5rem, 34%);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.strip-marketing__strips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.strip-marketing__row {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0.625rem;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.strip-marketing__row--active {
+  background: color-mix(in oklch, var(--primary) 8%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--primary) 35%, transparent);
+}
+
+.strip-marketing__row-label {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.strip-marketing__row-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.3125rem;
+  overflow: hidden;
+}
+
+.strip-marketing__chip {
+  flex-shrink: 0;
+  border-radius: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.2;
+  border: 1px solid color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+
+.strip-marketing__chip--insert {
+  animation: strip-chip-insert 0.5s ease-out;
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--primary) 55%, transparent);
+}
+
+.strip-marketing__distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border-left: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+  padding-left: 1rem;
+}
+
+.strip-marketing__distribution-title {
+  margin: 0;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.strip-marketing__bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+}
+
+.strip-marketing__bar--emphasize .strip-marketing__bar-value {
+  color: var(--primary);
+}
+
+.strip-marketing__bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+}
+
+.strip-marketing__bar-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  transition: color 0.2s ease;
+}
+
+.strip-marketing__bar-track {
+  height: 0.375rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: color-mix(in oklch, var(--muted) 55%, transparent);
+}
+
+.strip-marketing__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.strip-marketing__bar-fill--scatter {
+  background: color-mix(in oklch, #8b5cf6 85%, transparent);
+}
+
+.strip-marketing__bar-fill--wild {
+  background: color-mix(in oklch, #d97706 85%, transparent);
+}
+
+.strip-marketing__bar-fill--regular {
+  background: color-mix(in oklch, var(--muted-foreground) 70%, transparent);
+}
+
+@keyframes strip-chip-insert {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes strip-badge-pop {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .strip-marketing__body {
+    grid-template-columns: 1fr;
+  }
+
+  .strip-marketing__distribution {
+    border-left: none;
+    border-top: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+    padding-left: 0;
+    padding-top: 0.875rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strip-marketing__chip--insert,
+  .strip-marketing__badge--pop,
+  .strip-marketing__bar-fill {
+    animation: none;
+    transition: none;
+  }
+}

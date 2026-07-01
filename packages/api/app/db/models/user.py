@@ -21,6 +21,7 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    email_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     memberships: Mapped[list[OrganizationMember]] = relationship(
         back_populates="user",

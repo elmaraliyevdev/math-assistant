@@ -10,14 +10,17 @@ import { AppLayout } from '@/app/layout'
 import { useAuthStore } from '@/stores/auth-store'
 import { LoginPage } from '@/pages/auth/login'
 import { RegisterPage } from '@/pages/auth/register'
+import { ForgotPasswordPage } from '@/pages/auth/forgot-password'
+import { ResetPasswordPage } from '@/pages/auth/reset-password'
+import { VerifyEmailPage } from '@/pages/auth/verify-email'
 import { DashboardPage } from '@/pages/dashboard/index'
 import { GameCreatePage } from '@/pages/games/create'
 import { GameDetailPage } from '@/pages/games/detail'
 import { GameVersionDetailPage } from '@/pages/games/version-detail'
 import { GamesListPage } from '@/pages/games/list'
-import { OrganizationSettingsPage } from '@/pages/organizations/settings'
 import { OnboardingPage } from '@/pages/onboarding/index'
-import { AuditPage } from '@/pages/audit/index'
+import { ReelStudioLandingPage } from '@/pages/reel-studio/index'
+import { ReelStudioVersionPage } from '@/pages/reel-studio/version'
 import { SettingsPage } from '@/pages/settings/index'
 import { TemplatesPage } from '@/pages/templates/index'
 import { AssistantPage } from '@/pages/assistant/index'
@@ -27,6 +30,8 @@ import { SimulationsComparePage } from '@/pages/simulations/compare'
 import { SimulationDetailPage } from '@/pages/simulations/detail'
 import { SimulationReviewPage } from '@/pages/simulations/review'
 import { SimulationsListPage } from '@/pages/simulations/list'
+import { DemoPage } from '@/pages/demo/index'
+import { AdminContactPage } from '@/pages/admin/contact-submissions'
 
 function RootComponent() {
   return <Outlet />
@@ -67,6 +72,30 @@ const registerRoute = createRoute({
       throw redirect({ to: '/dashboard' })
     }
   },
+})
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: ForgotPasswordPage,
+})
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: ResetPasswordPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    token: typeof search.token === 'string' ? search.token : undefined,
+  }),
+})
+
+const verifyEmailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify-email',
+  component: VerifyEmailPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    token: typeof search.token === 'string' ? search.token : undefined,
+  }),
 })
 
 const protectedRoute = createRoute({
@@ -114,6 +143,18 @@ const gameVersionDetailRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/games/$gameId/versions/$versionId',
   component: GameVersionDetailPage,
+})
+
+const reelStudioRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/reel-studio',
+  component: ReelStudioLandingPage,
+})
+
+const reelStudioVersionRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/games/$gameId/versions/$versionId/reel-studio',
+  component: ReelStudioVersionPage,
 })
 
 const templatesRoute = createRoute({
@@ -167,13 +208,17 @@ const simulationReviewRoute = createRoute({
 const organizationSettingsRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/organizations/settings',
-  component: OrganizationSettingsPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/settings', search: { section: 'team' } })
+  },
 })
 
 const auditRoute = createRoute({
   getParentRoute: () => protectedRoute,
   path: '/audit',
-  component: AuditPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/settings', search: { section: 'audit' } })
+  },
 })
 
 const settingsRoute = createRoute({
@@ -182,10 +227,25 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 })
 
+const demoRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/demo',
+  component: DemoPage,
+})
+
+const adminContactRoute = createRoute({
+  getParentRoute: () => protectedRoute,
+  path: '/admin/contact',
+  component: AdminContactPage,
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   registerRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
+  verifyEmailRoute,
   protectedRoute.addChildren([
     onboardingRoute,
     dashboardRoute,
@@ -193,6 +253,8 @@ const routeTree = rootRoute.addChildren([
     gameCreateRoute,
     gameDetailRoute,
     gameVersionDetailRoute,
+    reelStudioRoute,
+    reelStudioVersionRoute,
     templatesRoute,
     mathematicsRoute,
     assistantRoute,
@@ -204,6 +266,8 @@ const routeTree = rootRoute.addChildren([
     organizationSettingsRoute,
     auditRoute,
     settingsRoute,
+    demoRoute,
+    adminContactRoute,
   ]),
 ])
 

@@ -1,399 +1,309 @@
-import { useMemo, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useEffect, useMemo, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/empty-state'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
+import { AssistantAssistantBubble, AssistantUserBubble } from '@/features/assistant/components/AssistantMessage'
+import { AssistantComposer } from '@/features/assistant/components/AssistantComposer'
+import { AssistantContextChips } from '@/features/assistant/components/AssistantContextChips'
+import { AssistantContextSidebar } from '@/features/assistant/components/AssistantContextSidebar'
+import { AssistantHistorySidebar } from '@/features/assistant/components/AssistantHistorySidebar'
+import { AssistantWelcome } from '@/features/assistant/components/AssistantWelcome'
+import { revealText } from '@/features/assistant/lib/conversations'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { CitationPanel } from '@/features/assistant/components/CitationPanel'
+  isRecommendIntent,
+  parseTargetRtp,
+  toAssistantMessage,
+} from '@/features/assistant/lib/intent'
+import { followUpsForMode, resolveSlashCommand } from '@/features/assistant/lib/prompts'
 import {
   useAnalyzeSimulation,
   useCompareSimulationsAssistant,
   useExplainGameVersion,
   useRecommendSimulation,
 } from '@/features/assistant/hooks/use-assistant'
+import { useAssistantConversations } from '@/features/assistant/hooks/use-assistant-conversations'
+import type { AssistantContextState } from '@/features/assistant/types'
 import { useGames, useGameVersions } from '@/features/games/hooks/use-games'
-import { useSimulations } from '@/features/simulations/hooks/use-simulations'
-import type { GroundedCitation } from '@/types/api'
-
-type ChatRole = 'user' | 'assistant'
-type AssistantMode = 'simulation' | 'compare' | 'game-version'
-
-interface ChatMessage {
-  id: string
-  role: ChatRole
-  content: string
-  citations?: GroundedCitation[]
-}
-
-function parseTargetRtp(message: string): number | undefined {
-  const match = message.match(/(\d{1,3}(?:\.\d+)?)\s*%?/)
-  if (!match) return undefined
-  const value = Number(match[1])
-  return Number.isFinite(value) ? value : undefined
-}
+import { useGameVersionBySimulation } from '@/features/simulations/hooks/use-game-version-lookup'
+import {
+  useSimulationResults,
+  useSimulations,
+} from '@/features/simulations/hooks/use-simulations'
+import { computeSimulationHealth } from '@/features/simulations/utils/health-score'
 
 export function AssistantChat() {
   const games = useGames()
   const simulations = useSimulations({ page: 1, pageSize: 50, status: 'completed' })
+  const {
+    conversations,
+    activeConversation,
+    activeId,
+    setActiveId,
+    startNewChat,
+    appendMessage,
+    patchMessage,
+    setContext,
+    deleteConversation,
+  } = useAssistantConversations()
 
   const analyze = useAnalyzeSimulation()
   const recommend = useRecommendSimulation()
   const compare = useCompareSimulationsAssistant()
   const explain = useExplainGameVersion()
 
-  const [mode, setMode] = useState<AssistantMode>('simulation')
-  const [gameId, setGameId] = useState('')
-  const [gameVersionId, setGameVersionId] = useState('')
-  const [simulationId, setSimulationId] = useState('')
-  const [compareIds, setCompareIds] = useState<string[]>([])
   const [input, setInput] = useState('')
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content:
-        'Ask about simulation results, game versions, RTP tuning, or comparison trade-offs. ' +
-        'All answers are grounded in stored mathematics artifacts with citations.',
-    },
-  ])
 
-  const versions = useGameVersions(gameId)
+  const context = activeConversation?.context ?? {
+    mode: 'simulation' as const,
+    gameId: '',
+    gameVersionId: '',
+    simulationId: '',
+    compareIds: [],
+  }
+
+  const versions = useGameVersions(context.gameId)
+  const simulationMeta = useMemo(
+    () =>
+      (simulations.data?.items ?? []).find((item) => item.id === context.simulationId),
+    [context.simulationId, simulations.data?.items],
+  )
+  const gameVersionLookup = useGameVersionBySimulation(simulationMeta?.gameVersionId)
+  const simulationResults = useSimulationResults(
+    context.simulationId,
+    Boolean(context.simulationId),
+  )
+
   const loading =
     analyze.isPending || recommend.isPending || compare.isPending || explain.isPending
 
-  const completedSimulations = useMemo(
-    () => simulations.data?.items ?? [],
-    [simulations.data?.items],
+  const completedSimulations = simulations.data?.items ?? []
+  const gamesList = games.data?.items ?? []
+
+  const selectedGame = gamesList.find((game) => game.id === context.gameId)
+  const selectedVersion = (versions.data ?? []).find(
+    (version) => version.id === context.gameVersionId,
   )
 
-  const gamesList = games.data?.items ?? []
-  const needsGames = mode === 'game-version' && gamesList.length === 0
-  const needsSimulations =
-    (mode === 'simulation' || mode === 'compare') && completedSimulations.length === 0
+  const studioGameId = context.gameId || gameVersionLookup.gameId || ''
+  const studioVersionId =
+    context.gameVersionId || simulationMeta?.gameVersionId || ''
 
-  const pushMessage = (message: ChatMessage) => {
-    setMessages((current) => [...current, message])
+  const healthScore = simulationResults.data
+    ? computeSimulationHealth(simulationResults.data).score
+    : null
+  const observedRtp = simulationResults.data?.summary.rtp ?? null
+  const targetRtp = simulationResults.data?.rtpValidation?.targetRtp ?? null
+
+  useEffect(() => {
+    if (!activeConversation && conversations.length === 0) {
+      startNewChat()
+    }
+  }, [activeConversation, conversations.length, startNewChat])
+
+  const updateContext = (patch: Partial<AssistantContextState>) => {
+    if (!activeId) return
+    setContext(activeId, { ...context, ...patch })
   }
 
-  const handleAssistantResponse = (content: string, citations: GroundedCitation[]) => {
-    pushMessage({
-      id: crypto.randomUUID(),
-      role: 'assistant',
-      content,
-      citations,
+  const streamAssistantReply = async (
+    conversationId: string,
+    messageId: string,
+    payload: ReturnType<typeof toAssistantMessage>,
+    mode: AssistantContextState['mode'],
+  ) => {
+    const followUps = followUpsForMode(mode)
+    patchMessage(conversationId, messageId, {
+      ...payload,
+      followUps,
+      isStreaming: true,
+      content: '',
+    })
+
+    await revealText(payload.content, (partial) => {
+      patchMessage(conversationId, messageId, { content: partial, isStreaming: true })
+    })
+
+    patchMessage(conversationId, messageId, {
+      content: payload.content,
+      isStreaming: false,
+      followUps,
     })
   }
 
-  const runSimulationIntent = async (message: string) => {
-    if (!simulationId) {
-      pushMessage({
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Select a completed simulation before asking simulation questions.',
-      })
-      return
-    }
-
-    const lower = message.toLowerCase()
-    if (lower.includes('recommend') || lower.includes('tuning') || lower.includes('calibrat')) {
-      const targetRtp = parseTargetRtp(message)
-      const response = await recommend.mutateAsync({ simulationId, targetRtp })
-      handleAssistantResponse(response.content, response.citations)
-      return
-    }
-
-    const response = await analyze.mutateAsync(simulationId)
-    handleAssistantResponse(response.content, response.citations)
-  }
-
-  const runCompareIntent = async () => {
-    if (compareIds.length < 2) {
-      pushMessage({
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Select at least two completed simulations to compare.',
-      })
-      return
-    }
-    const response = await compare.mutateAsync(compareIds)
-    handleAssistantResponse(response.content, response.citations)
-  }
-
-  const runGameVersionIntent = async () => {
-    if (!gameVersionId) {
-      pushMessage({
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        content: 'Select a game version before asking design questions.',
-      })
-      return
-    }
-    const response = await explain.mutateAsync(gameVersionId)
-    handleAssistantResponse(response.content, response.citations)
-  }
-
   const handleSubmit = async (messageOverride?: string) => {
-    const trimmed = (messageOverride ?? input).trim()
-    if (!trimmed || loading) return
+    const resolved = resolveSlashCommand(messageOverride ?? input) ?? (messageOverride ?? input)
+    const trimmed = resolved.trim()
+    if (!trimmed || loading || !activeId) return
 
-    if (!messageOverride) {
-      setInput('')
-    }
+    if (!messageOverride) setInput('')
 
-    pushMessage({ id: crypto.randomUUID(), role: 'user', content: trimmed })
+    appendMessage(
+      activeId,
+      { id: crypto.randomUUID(), role: 'user', content: trimmed },
+      trimmed,
+    )
+
+    const assistantId = crypto.randomUUID()
+    appendMessage(activeId, {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      isStreaming: true,
+    })
 
     try {
-      if (mode === 'simulation') {
-        await runSimulationIntent(trimmed)
-      } else if (mode === 'compare') {
-        await runCompareIntent()
-      } else {
-        await runGameVersionIntent()
+      if (context.mode === 'simulation') {
+        if (!context.simulationId) {
+          patchMessage(activeId, assistantId, {
+            content: 'Select a completed simulation in the context panel first.',
+            isStreaming: false,
+          })
+          return
+        }
+
+        const response = isRecommendIntent(trimmed)
+          ? await recommend.mutateAsync({
+              simulationId: context.simulationId,
+              targetRtp: parseTargetRtp(trimmed),
+            })
+          : await analyze.mutateAsync(context.simulationId)
+
+        await streamAssistantReply(
+          activeId,
+          assistantId,
+          toAssistantMessage(response),
+          context.mode,
+        )
+        return
       }
+
+      if (context.mode === 'compare') {
+        if (context.compareIds.length < 2) {
+          patchMessage(activeId, assistantId, {
+            content: 'Select at least two simulations to compare.',
+            isStreaming: false,
+          })
+          return
+        }
+        const response = await compare.mutateAsync(context.compareIds)
+        await streamAssistantReply(
+          activeId,
+          assistantId,
+          toAssistantMessage(response),
+          context.mode,
+        )
+        return
+      }
+
+      if (!context.gameVersionId) {
+        patchMessage(activeId, assistantId, {
+          content: 'Select a game version in the context panel first.',
+          isStreaming: false,
+        })
+        return
+      }
+
+      const response = await explain.mutateAsync(context.gameVersionId)
+      await streamAssistantReply(
+        activeId,
+        assistantId,
+        toAssistantMessage(response),
+        context.mode,
+      )
     } catch {
-      pushMessage({
-        id: crypto.randomUUID(),
-        role: 'assistant',
+      patchMessage(activeId, assistantId, {
         content: 'Unable to generate a grounded response for that request.',
+        isStreaming: false,
       })
     }
   }
 
-  const toggleCompareId = (id: string) => {
-    setCompareIds((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id].slice(0, 5),
-    )
-  }
+  const messages = activeConversation?.messages ?? []
+  const showWelcome = messages.length === 0
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Context</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Assistant mode</Label>
-            <Select value={mode} onValueChange={(value) => setMode(value as AssistantMode)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="simulation">Simulation analysis</SelectItem>
-                <SelectItem value="compare">Simulation comparison</SelectItem>
-                <SelectItem value="game-version">Game version design</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+      <div className="hidden lg:block">
+        <AssistantHistorySidebar
+          conversations={conversations}
+          activeId={activeId}
+          onSelect={setActiveId}
+          onNew={() => startNewChat(context)}
+          onDelete={deleteConversation}
+        />
+      </div>
 
-          {needsGames && (
-            <EmptyState
-              title="No games available"
-              description="Create a game and upload a version before asking the assistant about mathematical design."
-              actions={
-                <>
-                  <Button size="sm" asChild>
-                    <Link to="/games/create">Create game</Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/templates">Browse templates</Link>
-                  </Button>
-                </>
-              }
+      <section className="flex min-h-0 min-w-0 flex-col bg-background">
+        <AssistantContextChips
+          context={context}
+          gameName={selectedGame?.name ?? gameVersionLookup.gameName}
+          versionNumber={selectedVersion?.version ?? gameVersionLookup.versionNumber}
+          healthScore={healthScore}
+          targetRtp={targetRtp}
+        />
+
+        <div className="flex-1 overflow-y-auto">
+          {showWelcome ? (
+            <AssistantWelcome
+              simulationLoaded={Boolean(context.simulationId && simulationResults.data)}
+              healthScore={healthScore}
+              observedRtp={observedRtp}
+              targetRtp={targetRtp}
+              onPrompt={(prompt) => void handleSubmit(prompt)}
             />
-          )}
-
-          {needsSimulations && (
-            <EmptyState
-              title="No completed simulations"
-              description="Run a simulation to completion, then return here to analyze results or compare runs."
-              actions={
-                <>
-                  <Button size="sm" asChild>
-                    <Link to="/simulations/create">Create simulation</Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/simulations">View simulations</Link>
-                  </Button>
-                </>
-              }
-            />
-          )}
-
-          {mode === 'game-version' && !needsGames && (
-            <>
-              <div className="space-y-2">
-                <Label>Game</Label>
-                <Select
-                  value={gameId}
-                  onValueChange={(value) => {
-                    setGameId(value)
-                    setGameVersionId('')
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select game" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(games.data?.items ?? []).map((game) => (
-                      <SelectItem key={game.id} value={game.id}>
-                        {game.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Game version</Label>
-                <Select value={gameVersionId} onValueChange={setGameVersionId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select version" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(versions.data ?? []).map((version) => (
-                      <SelectItem key={version.id} value={version.id}>
-                        v{version.version}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
-
-          {mode === 'simulation' && !needsSimulations && (
-            <div className="space-y-2">
-              <Label>Simulation</Label>
-              <Select value={simulationId} onValueChange={setSimulationId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select simulation" />
-                </SelectTrigger>
-                <SelectContent>
-                  {completedSimulations.map((simulation) => (
-                    <SelectItem key={simulation.id} value={simulation.id}>
-                      {simulation.id.slice(0, 8)} · {simulation.spinCount} spins
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          ) : (
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6">
+              {messages.map((message) =>
+                message.role === 'user' ? (
+                  <AssistantUserBubble key={message.id} content={message.content} />
+                ) : (
+                  <AssistantAssistantBubble
+                    key={message.id}
+                    message={message}
+                    simulationId={context.simulationId || undefined}
+                    gameVersionId={studioVersionId || undefined}
+                    gameId={studioGameId || undefined}
+                    onFollowUp={(prompt) => void handleSubmit(prompt)}
+                  />
+                ),
+              )}
             </div>
           )}
+        </div>
 
-          {mode === 'compare' && !needsSimulations && (
-            <div className="space-y-2">
-              <Label>Simulations to compare</Label>
-              <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-2">
-                {completedSimulations.map((simulation) => (
-                  <label
-                    key={simulation.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={compareIds.includes(simulation.id)}
-                      onChange={() => toggleCompareId(simulation.id)}
-                    />
-                    {simulation.id.slice(0, 8)} · {simulation.spinCount} spins
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+        <AssistantComposer
+          value={input}
+          onChange={setInput}
+          onSubmit={() => void handleSubmit()}
+          loading={loading}
+          onQuickAction={(prompt) => void handleSubmit(prompt)}
+          onUseContext={() => {
+            if (context.mode === 'simulation' && context.simulationId) {
+              void handleSubmit('Analyze the currently selected simulation.')
+            } else if (context.mode === 'compare' && context.compareIds.length >= 2) {
+              void handleSubmit('Compare the selected simulations.')
+            } else if (context.gameVersionId) {
+              void handleSubmit('Explain the selected game version design.')
+            }
+          }}
+        />
+      </section>
 
-          <div className="flex flex-wrap gap-2">
-            {mode === 'simulation' && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!simulationId || loading}
-                  onClick={() => void handleSubmit('Explain RTP decomposition and feature contribution.')}
-                >
-                  Analyze RTP
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={!simulationId || loading}
-                  onClick={() => void handleSubmit('Recommend RTP tuning actions for target 96%.')}
-                >
-                  Recommend tuning
-                </Button>
-              </>
-            )}
-            {mode === 'compare' && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={compareIds.length < 2 || loading}
-                onClick={() => void handleSubmit('Explain why RTP differs between these simulations.')}
-              >
-                Explain comparison
-              </Button>
-            )}
-            {mode === 'game-version' && (
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!gameVersionId || loading}
-                onClick={() => void handleSubmit('Summarize feature structure and risk profile.')}
-              >
-                Explain design
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="flex min-h-[560px] flex-col">
-        <CardHeader>
-          <CardTitle>Mathematics Assistant</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col gap-4">
-          <div className="flex-1 space-y-4 overflow-y-auto rounded-md border p-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={
-                  message.role === 'user'
-                    ? 'ml-8 rounded-md bg-primary/10 p-3 text-sm'
-                    : 'mr-8 rounded-md bg-muted/40 p-3 text-sm'
-                }
-              >
-                <p className="whitespace-pre-wrap">{message.content}</p>
-                {message.citations && message.citations.length > 0 && (
-                  <div className="mt-3">
-                    <CitationPanel citations={message.citations} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <Textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask about RTP behavior, feature contribution, calibration, or comparisons..."
-              rows={3}
-            />
-            <div className="flex justify-end">
-              <Button disabled={loading || !input.trim()} onClick={() => void handleSubmit()}>
-                {loading ? 'Thinking…' : 'Send'}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="hidden lg:block">
+        <AssistantContextSidebar
+          context={context}
+          onChange={updateContext}
+          games={gamesList}
+          versions={versions.data ?? []}
+          completedSimulations={completedSimulations}
+          gameName={selectedGame?.name ?? gameVersionLookup.gameName}
+          versionNumber={selectedVersion?.version ?? gameVersionLookup.versionNumber}
+          observedRtp={observedRtp}
+          targetRtp={targetRtp}
+          healthScore={healthScore}
+          certificationLabel={
+            simulationResults.data?.certificationNotice ? 'Review notice' : null
+          }
+        />
+      </div>
     </div>
   )
 }

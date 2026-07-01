@@ -18,14 +18,14 @@ export function RtpGaugeChart({ label, value, max = 100 }: RtpGaugeChartProps) {
         <path
           d="M 30 100 A 70 70 0 0 1 170 100"
           fill="none"
-          stroke="hsl(var(--muted))"
+          stroke="var(--muted)"
           strokeWidth="12"
           strokeLinecap="round"
         />
         <path
           d="M 30 100 A 70 70 0 0 1 170 100"
           fill="none"
-          stroke="hsl(var(--primary))"
+          stroke="var(--primary)"
           strokeWidth="12"
           strokeLinecap="round"
           pathLength={1}
@@ -36,11 +36,11 @@ export function RtpGaugeChart({ label, value, max = 100 }: RtpGaugeChartProps) {
           y1="100"
           x2={needleX}
           y2={needleY}
-          stroke="hsl(var(--foreground))"
+          stroke="var(--foreground)"
           strokeWidth="3"
           strokeLinecap="round"
         />
-        <circle cx="100" cy="100" r="5" fill="hsl(var(--foreground))" />
+        <circle cx="100" cy="100" r="5" fill="var(--foreground)" />
       </svg>
       <div className="text-center">
         <p className="text-xs uppercase tracking-wide text-muted-foreground">

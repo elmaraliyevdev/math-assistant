@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from runtime_core.intelligence.models import SimulationIntelligenceReport
+
 
 class RTPResult(BaseModel):
     """Return-to-player metrics from aggregated simulation totals."""
@@ -169,5 +171,9 @@ class MathematicsReport(BaseModel):
         alias="featureValidation",
     )
     recommendations: tuple[RecommendationResult, ...] = ()
+    simulation_intelligence: SimulationIntelligenceReport | None = Field(
+        default=None,
+        alias="simulationIntelligence",
+    )
     spin_count: int = Field(alias="spinCount")
     engine_version: str = Field(alias="engineVersion")

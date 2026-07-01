@@ -431,3 +431,14 @@ class AlreadyOrganizationMemberError(DomainError):
             message="user is already a member of this organization",
             details={"email": email, "organizationId": organization_id},
         )
+
+
+class DemoWorkspaceNotFoundError(DomainError):
+    code = "DEMO_WORKSPACE_NOT_FOUND"
+    status_code = 404
+
+    def __init__(self) -> None:
+        super().__init__(
+            message="demo workspace not configured",
+            details=None,
+        )

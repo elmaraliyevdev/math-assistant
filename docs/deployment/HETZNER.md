@@ -87,6 +87,8 @@ curl -s http://localhost:8080/api/engine/version | jq '.maxRecommendedSpinCount'
 
 ## 4. HTTPS with Caddy (recommended)
 
+> **Domain split:** Keep the landing on `mathstudio.app` (Vercel) and point the app to `app.mathstudio.app` (Hetzner). See **[DOMAIN_SETUP.md](./DOMAIN_SETUP.md)** for Dynadot DNS.
+
 Install Caddy on the host and reverse-proxy to the web container:
 
 ```bash
@@ -99,7 +101,7 @@ apt-get update && apt-get install -y caddy
 `/etc/caddy/Caddyfile`:
 
 ```caddy
-math.example.com {
+app.mathstudio.app {
     reverse_proxy localhost:8080
 }
 ```
@@ -108,7 +110,7 @@ math.example.com {
 systemctl reload caddy
 ```
 
-Set `API_ENABLE_HSTS=true` in your env file once HTTPS is working.
+Set `API_ENABLE_HSTS=true` and `API_FRONTEND_URL=https://app.mathstudio.app` in your env file once HTTPS is working.
 
 ## 5. Backups
 
@@ -122,6 +124,13 @@ docker compose -f docker-compose.prod.yml --profile mvp exec postgres \
 Automate with a cron job and off-site sync (Hetzner Storage Box or S3-compatible storage).
 
 ## 6. Upgrading
+
+```bash
+cd math-assistant
+./scripts/server-update.sh
+```
+
+Or manually:
 
 ```bash
 cd math-assistant

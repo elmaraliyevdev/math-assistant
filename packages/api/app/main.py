@@ -25,7 +25,9 @@ from app.routers import (
     audit,
     ai,
     auth,
+    contact,
     dashboard,
+    demo,
     engine,
     exports,
     game_versions,
@@ -36,6 +38,8 @@ from app.routers import (
     metrics,
     notifications,
     organizations,
+    reel_studio,
+    reel_constraints,
     settings as settings_router,
     simulations,
     workers,
@@ -130,6 +134,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(metrics.router)
     app.include_router(engine.router)
     app.include_router(auth.router)
+    app.include_router(contact.router)
+    app.include_router(demo.router)
     app.include_router(settings_router.router)
     app.include_router(notifications.router)
     app.include_router(audit.router)
@@ -142,6 +148,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(simulations.router)
     app.include_router(workers.router)
     app.include_router(mathematics.router)
+    app.include_router(reel_studio.router)
+    app.include_router(reel_constraints.router)
     app.include_router(ai.router)
     return app
 

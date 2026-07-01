@@ -107,6 +107,7 @@ export function useSimulationTableRows(
           version?.organizationId ??
           '—',
         rtp: results?.summary.rtp ?? null,
+        rtpDeviation: results?.rtpValidation?.difference ?? null,
         totalBetMinorUnits: results?.totals.totalBetMinorUnits ?? null,
         totalWinMinorUnits: results?.totals.totalWinMinorUnits ?? null,
       }

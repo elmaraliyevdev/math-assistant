@@ -75,7 +75,12 @@ class GameService:
         page_size: int,
         search: str | None,
     ) -> GameListResponse:
-        organization_ids = auth.organization_ids
+        from app.services.demo_access import readable_organization_ids
+
+        organization_ids = await readable_organization_ids(
+            self.games._session,
+            auth,
+        )
         total = await self.games.count_search(
             search,
             organization_ids=organization_ids,
@@ -103,7 +108,12 @@ class GameService:
         game_id: uuid.UUID,
         body: UpdateGameRequest,
     ) -> GameResponse:
+        from app.services.demo_access import get_demo_organization_id, is_demo_organization
+
         game = await self._require_game(auth, game_id)
+        demo_org_id = await get_demo_organization_id(self.games._session)
+        if is_demo_organization(game.organization_id, demo_org_id):
+            raise ForbiddenError(message="demo workspace is read-only")
         auth.require_role(game.organization_id, OrganizationRole.DEVELOPER)
         if body.name is not None:
             game.name = body.name
@@ -113,7 +123,12 @@ class GameService:
         return _to_game_response(updated)
 
     async def delete_game(self, auth: AuthContext, game_id: uuid.UUID) -> None:
+        from app.services.demo_access import get_demo_organization_id, is_demo_organization
+
         game = await self._require_game(auth, game_id)
+        demo_org_id = await get_demo_organization_id(self.games._session)
+        if is_demo_organization(game.organization_id, demo_org_id):
+            raise ForbiddenError(message="demo workspace is read-only")
         auth.require_role(game.organization_id, OrganizationRole.DEVELOPER)
         await self.games.delete(game)
         audit = AuditService.from_session(self.games._session)
@@ -127,11 +142,23 @@ class GameService:
         )
 
     async def _require_game(self, auth: AuthContext, game_id: uuid.UUID) -> Game:
+        from app.services.demo_access import (
+            get_demo_organization_id,
+            is_demo_organization,
+            readable_organization_ids,
+        )
+
+        organization_ids = await readable_organization_ids(
+            self.games._session,
+            auth,
+        )
         game = await self.games.get_by_id_for_organizations(
             game_id,
-            auth.organization_ids,
+            organization_ids,
         )
         if game is None:
             raise GameNotFoundError(game_id=str(game_id))
-        auth.require_membership(game.organization_id)
+        demo_org_id = await get_demo_organization_id(self.games._session)
+        if not is_demo_organization(game.organization_id, demo_org_id):
+            auth.require_membership(game.organization_id)
         return game

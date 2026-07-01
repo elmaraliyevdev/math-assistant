@@ -31,6 +31,7 @@ vi.mock('@tanstack/react-router', () => ({
       {children}
     </a>
   ),
+  useNavigate: () => vi.fn(),
 }))
 
 vi.mock('@/features/auth/use-auth', () => ({
@@ -119,7 +120,7 @@ describe('platform polish components', () => {
   it('shows simulation table empty state CTAs', () => {
     render(<SimulationTableEmpty hasFilters={false} />)
 
-    expect(screen.getByRole('link', { name: 'Create simulation' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'New simulation' })).toHaveAttribute(
       'href',
       '/simulations/create',
     )

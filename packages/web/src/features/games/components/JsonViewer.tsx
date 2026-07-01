@@ -143,7 +143,7 @@ function Line({
       : type === 'number'
         ? 'text-amber-600 dark:text-amber-400'
         : type === 'boolean'
-          ? 'text-violet-600 dark:text-violet-400'
+          ? 'text-primary'
           : 'text-muted-foreground'
 
   return (

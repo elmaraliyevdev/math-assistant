@@ -1,5 +1,5 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { Download, FlaskConical, Sigma } from 'lucide-react'
+import { Download, Film, FlaskConical, Sigma } from 'lucide-react'
 import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -56,6 +56,15 @@ export function GameVersionDetailPage() {
             >
               <FlaskConical className="h-4 w-4" />
               Run simulation
+            </Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link
+              to="/games/$gameId/versions/$versionId/reel-studio"
+              params={{ gameId, versionId }}
+            >
+              <Film className="h-4 w-4" />
+              Open Reel Studio
             </Link>
           </Button>
           <Button variant="secondary" asChild>
