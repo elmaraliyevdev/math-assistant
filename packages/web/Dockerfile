@@ -5,6 +5,7 @@ WORKDIR /workspace/packages/web
 COPY packages/web/package*.json ./
 RUN npm ci
 COPY packages/web .
+COPY packages/brand /workspace/packages/brand
 COPY logo.svg logo-white.svg black-logo-icon.svg white-logo-icon.svg /workspace/
 
 ARG VITE_SITE_URL=https://app.mathstudio.app

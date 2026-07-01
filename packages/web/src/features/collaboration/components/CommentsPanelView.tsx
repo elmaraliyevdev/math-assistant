@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RoleBadge } from '@/features/organizations/components/RoleBadge'
-import type { SimulationComment, SimulationActivity } from '@/features/collaboration/types'
+import type { SimulationComment } from '@/features/collaboration/types'
 import type { OrganizationRole } from '@/types/api'
 import { formatDate } from '@/lib/utils'
 
